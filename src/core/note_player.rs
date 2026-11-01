@@ -136,4 +136,12 @@ impl NotePlayer {
             self.play_note(note, sec);
         }
     }
+    /// Wait for seconds.
+    /// It will not panic if the seconds are nagative.
+    pub fn rest(sec: f32) {
+        if sec <= 0.0 {
+            return;
+        }
+        std::thread::sleep(Duration::from_secs_f32(sec));
+    }
 }
