@@ -4,8 +4,6 @@ use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player};
 use std::time::Duration;
 
 /// The note player.
-/// This struct has no public fields.
-/// [Noteplsye](NotePlayer)
 pub struct NotePlayer {
     _handle: MixerDeviceSink,
     player: Player,
