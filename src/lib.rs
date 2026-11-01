@@ -3,7 +3,6 @@
 #![warn(rustdoc::invalid_html_tags)]
 #![warn(clippy::all)]
 //! # Noteplay: Midi Player for Rust
-//!
 //! **Noteplay** is a simple & efficient library for **midi playback**.
 
 pub mod core;

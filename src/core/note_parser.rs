@@ -36,6 +36,6 @@ pub(crate) fn note2freq(note: &str) -> f32 {
         n += 1;
     }
     let total = n + (octave - 4) * 12 - 9;
-    let freq = 440.0 * 2.0f32.powf(total as f32 / 12.0);
-    freq
+
+    440.0 * 2.0f32.powf(total as f32 / 12.0)
 }
