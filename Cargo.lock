@@ -399,7 +399,6 @@ dependencies = [
 name = "noteplay"
 version = "0.1.0"
 dependencies = [
- "pitchy",
  "rodio",
 ]
 
@@ -571,12 +570,6 @@ name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
-
-[[package]]
-name = "pitchy"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30d1d821a5ddcac0dd98f59f61652531c0520e93e85f48a73609c04bcee456dd"
 
 [[package]]
 name = "pkg-config"

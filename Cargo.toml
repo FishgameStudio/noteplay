@@ -3,6 +3,9 @@ name = "noteplay"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "noteplay"
+doc = true
+
 [dependencies]
-pitchy = "0.2.0"
 rodio = "0.23.0"
