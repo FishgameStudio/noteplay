@@ -37,7 +37,7 @@ impl NotePlayer {
     /// ```no_run
     /// # use noteplay::core::NotePlayer;
     /// # use std::time::Duration;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>>{
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
     /// // Play A4 for 0.5 seconds.
     /// p.play_freq_async(440.0, 0.5);
@@ -58,7 +58,7 @@ impl NotePlayer {
     /// ```no_run
     /// # use noteplay::core::NotePlayer;
     /// # use std::time::Duration;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>>{
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
     /// // Play A4 for 0.5 seconds.
     /// p.play_freq(440.0, 0.5);
@@ -67,11 +67,11 @@ impl NotePlayer {
     /// ```
     pub fn play_freq(&self, freq: f32, sec: f32) {
         self.play_freq_async(freq, sec);
-        std::thread::sleep(Duration::from_secs_f32(sec));
+        std::thread::sleep(Duration::from_secs_f32(sec + 0.05)); // Pause for a moment
     }
 
     /// **Asynchronous** play a specified note within given seconds.
-    /// Click here to learn more about the note.
+    /// Click [here](https://www.dolmetsch.com/musictheory1.htm) to learn more about the note.
     ///
     /// # Panics
     ///
@@ -82,7 +82,7 @@ impl NotePlayer {
     /// ```no_run
     /// # use noteplay::core::NotePlayer;
     /// # use std::time::Duration;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>>{
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
     /// // Play A4 for 0.5 seconds.
     /// p.play_note_async("A4", 0.5);
@@ -95,7 +95,7 @@ impl NotePlayer {
     }
 
     /// Synchronous play a specified note within given seconds.
-    /// Click here to learn more about the note.
+    /// Click [here](https://www.dolmetsch.com/musictheory1.htm) to learn more about the note.
     ///
     /// # Panics
     ///
@@ -105,7 +105,7 @@ impl NotePlayer {
     /// # Example
     /// ```no_run
     /// # use noteplay::core::NotePlayer;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>>{
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
     /// // Play A4 for 0.5 seconds.
     /// p.play_note("A4", 0.5);
@@ -114,5 +114,25 @@ impl NotePlayer {
     /// ```
     pub fn play_note(&self, note: &str, sec: f32) {
         self.play_freq(note2freq(note), sec);
+    }
+
+    /// Synchronous repeat notes of a specified frequency.
+    ///
+    /// # Panics
+    /// If the frequency isn't greater than 0.
+    pub fn repeat_freq(&self, freq: f32, sec: f32, repetitions: u64) {
+        for _ in 0..repetitions {
+            self.play_freq(freq, sec);
+        }
+    }
+    /// Synchronous repeat notes.
+    /// Click [here](https://www.dolmetsch.com/musictheory1.htm) to learn more about the note.
+    ///
+    /// # Panics
+    /// If the frequency isn't greater than 0.
+    pub fn repeat_note(&self, note: &str, sec: f32, repetitions: u64) {
+        for _ in 0..repetitions {
+            self.play_note(note, sec);
+        }
     }
 }
