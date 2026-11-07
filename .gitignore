@@ -1,3 +1,5 @@
 /target
-/bin_output
 Cargo.lock
+
+# Directory for binary outputs.
+/bin_output
