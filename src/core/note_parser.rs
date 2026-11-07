@@ -1,6 +1,9 @@
 //! Parser for the musical note.
 
-pub(crate) fn note2freq(note: &str) -> f32 {
+/// Parse note and give a frequency.
+/// # Panics
+/// If the format of the note is invalid.
+pub fn note2freq(note: &str) -> f32 {
     let note = note.trim().to_ascii_uppercase(); // All uppercase
     let mut chars = note.chars().peekable();
     let base = chars

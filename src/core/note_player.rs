@@ -1,12 +1,13 @@
 use crate::core::note_parser::note2freq;
+use rodio::mixer::Mixer;
 use rodio::source::{SineWave, Source};
-use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player};
+use rodio::{DeviceSinkBuilder, MixerDeviceSink};
 use std::time::Duration;
 
 /// The note player.
 pub struct NotePlayer {
     _handle: MixerDeviceSink,
-    player: Player,
+    mixer: Mixer,
 }
 
 impl std::fmt::Debug for NotePlayer {
@@ -22,10 +23,10 @@ impl NotePlayer {
     pub fn new() -> Result<Self, rodio::DeviceSinkError> {
         let mut handle = DeviceSinkBuilder::open_default_sink()?;
         handle.log_on_drop(false);
-        let player = Player::connect_new(handle.mixer());
+        let mixer = handle.mixer().clone();
         Ok(Self {
             _handle: handle,
-            player,
+            mixer,
         })
     }
 
@@ -47,7 +48,7 @@ impl NotePlayer {
     pub fn play_freq_async(&self, freq: f32, sec: f32) {
         assert!(freq > 0.0, "Frequency must be greater than 0");
         let source = SineWave::new(freq).take_duration(Duration::from_secs_f32(sec));
-        self.player.append(source);
+        self.mixer.add(source);
     }
 
     /// Synchronous play a note of a specified frequency.
