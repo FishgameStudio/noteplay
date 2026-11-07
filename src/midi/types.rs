@@ -3,7 +3,7 @@
 /// The one note.
 /// This is an alias of two [`f32`] types.
 /// The first number is the frequency,
-/// and the second one is the duration.
+/// and the second one is the duration (beat).
 pub type Note = (f32, f32);
 
 /// A storage of an event in a tempo.
