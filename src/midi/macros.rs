@@ -68,8 +68,7 @@ macro_rules! event_const {
         $crate::midi::EventRaw {
             delta_beat: $delta,
             notes: &[$(
-                ($crate::core::note2freq_const($name),
-                $dur)
+                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur)
             ),*],
         }
     }};

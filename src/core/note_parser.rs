@@ -40,20 +40,20 @@ pub fn note2freq(note: &str) -> f32 {
     440.0 * ((total as f32) / 12.0).exp2()
 }
 
-/// Parse scientific pitch notation (e.g. "C4", "A#4", "Db5") to frequency Hz.
-/// Suitable for const conditions.
+/// Parse scientific pitch notation ("C4", "A#4", "Db5") into semitone offset (A4 = 0).
+/// Stable const fn, no floating point approximation.
 ///
 /// # Panics
 /// Invalid byte format, unknown base note, bad octave digit.
-pub const fn note2freq_const(note: &str) -> f32 {
+pub const fn note2semi(note: &str) -> i32 {
     let b = note.as_bytes();
     let len = b.len();
-    assert!(len >= 2, "note too short");
+    assert!(len >= 2, "note string too short");
 
     let mut idx = 0;
-    // base note: C D E F G A B
     let base_byte = b[idx];
     idx += 1;
+
     let base_semi = match base_byte {
         b'C' | b'c' => 0,
         b'D' | b'd' => 2,
@@ -62,10 +62,9 @@ pub const fn note2freq_const(note: &str) -> f32 {
         b'G' | b'g' => 7,
         b'A' | b'a' => 9,
         b'B' | b'b' => 11,
-        _ => panic!("unknown base note"),
+        _ => panic!("unknown note base char"),
     };
 
-    // accidental # / b
     let mut alter = 0;
     if idx < len {
         match b[idx] {
@@ -81,33 +80,20 @@ pub const fn note2freq_const(note: &str) -> f32 {
         }
     }
 
-    // const parse octave digits (supports single digit, 0-9)
     let mut octave = 0;
     while idx < len {
         let digit = b[idx];
-        assert!(digit >= b'0' && digit <= b'9', "bad octave digit");
+        assert!(digit >= b'0' && digit <= b'9', "invalid octave digit");
         octave = octave * 10 + (digit - b'0') as i32;
         idx += 1;
     }
 
-    // total semi offset, A4 = 0
-    let total = (base_semi + alter) + (octave - 4) * 12 - 9;
-    let x = total as f32 / 12.0;
-
-    // Stable const polynomial approximation of 2^x, no exp2/powf
-    // Approx range: x included in [-5.0, 5.0]
-    let pow2 = const_pow2(x);
-    440.0 * pow2
+    (base_semi + alter) + (octave - 4) * 12 - 9
 }
 
-/// Const approximation of 2^x, stable Rust, no std pow.
-/// Polynomial minimax fit for [-5, 5]
-const fn const_pow2(x: f32) -> f32 {
-    // 2^x = exp(ln2 * x)
-    const LN2: f32 = 0.6931418;
-    let t = LN2 * x;
-    // taylor / minimax polynomial
-    1.0 + t + t * t / 2.0 + t * t * t / 6.0 + t * t * t * t / 24.0 + t * t * t * t * t / 120.0
+/// Runtime: convert semi offset(A4=0) to exact frequency Hz
+pub fn semi2freq(semi: i32) -> f32 {
+    440.0 * (semi as f32 / 12.0).exp2()
 }
 
 #[cfg(test)]
@@ -128,14 +114,6 @@ mod tests {
         assert!(approx_eq(note2freq("E4"), 329.6276, EPS));
         assert!(approx_eq(note2freq("Eb4"), 311.127, EPS));
         assert!(approx_eq(note2freq("G#5"), 830.6094, EPS));
-
-        assert!(approx_eq(note2freq_const("A4"), 440.00, EPS));
-        assert!(approx_eq(note2freq_const("C5"), 523.2511, EPS));
-        assert!(approx_eq(note2freq_const("G4"), 391.9954, EPS));
-        assert!(approx_eq(note2freq_const("B6"), 1975.5332, EPS));
-        assert!(approx_eq(note2freq_const("E4"), 329.6276, EPS));
-        assert!(approx_eq(note2freq_const("Eb4"), 311.127, EPS));
-        assert!(approx_eq(note2freq_const("G#5"), 830.6094, EPS));
     }
 
     #[test]

@@ -14,13 +14,8 @@ path = "src/lib.rs"
 doc = true
 
 [[bin]]
-name = "play"
-path = "src/main.rs"
-
-[[bin]]
-name = "construct_midi"
-path = "src/construct_midi.rs"
-
+name = "test"
+path = "src/test.rs"
 
 [dependencies]
 rodio = "0.23.0"
