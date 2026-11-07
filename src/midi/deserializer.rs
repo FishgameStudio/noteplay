@@ -4,38 +4,38 @@ use crate::midi::types::{Bytes, Event, MAGIC, Midi, VERSION};
 
 use std::io::{Cursor, Error, ErrorKind, Read};
 
-/// Deserialize binary.
+/// Deserialize binary which serialized with function [`serialize`](crate::midi::serialize).
 /// # Errors
 /// If the format is invalid.
 pub fn deserialize(bin: Bytes) -> Result<Midi, Box<dyn std::error::Error>> {
     #[inline]
-    fn error(msg: &str) -> Error {
-        Error::new(ErrorKind::InvalidData, msg)
+    fn error(msg: &str) -> Result<Midi, Error> {
+        Err(Error::new(ErrorKind::InvalidData, msg))
     }
 
     let mut r = Cursor::new(&bin);
     if bin.len() < 14 {
-        return Err(error("Binary too short").into());
+        error("Binary too short")?;
     }
     // Magic number
     let mut magic = [0u8; 4];
     r.read_exact(&mut magic)?;
     if magic != MAGIC {
-        return Err(error("not a QMid file").into());
+        error("not a QMid file")?;
     }
     // Version
     let mut version_buf = [0u8; 2];
     r.read_exact(&mut version_buf)?;
     let version = u16::from_le_bytes(version_buf);
     if version != VERSION {
-        return Err(error("Version mismatch").into());
+        error("Version mismatch")?;
     }
     // Tempo BPM
     let mut tempo_buf = [0u8; 4];
     r.read_exact(&mut tempo_buf)?;
     let tempo = f32::from_le_bytes(tempo_buf);
     if tempo < 0.0 {
-        return Err(error(&format!("Invalid tempo: {tempo}")).into());
+        error(&format!("Invalid tempo: {tempo}"))?;
     }
     // Event count
     let mut event_cnt_buf = [0u8; 4];
@@ -44,7 +44,6 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Box<dyn std::error::Error>> {
 
     let mut events = Vec::with_capacity(event_count as usize);
     for _ in 0..event_count {
-        // 新增：读 delta_beat
         let mut delta_buf = [0u8; 4];
         r.read_exact(&mut delta_buf)?;
         let delta_beat = f32::from_le_bytes(delta_buf);

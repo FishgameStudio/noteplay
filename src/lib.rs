@@ -1,4 +1,5 @@
 #![deny(missing_docs)]
+#![deny(unknown_lints)]
 #![warn(rustdoc::broken_intra_doc_links)]
 #![warn(rustdoc::invalid_html_tags)]
 #![warn(clippy::all)]

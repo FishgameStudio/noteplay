@@ -34,7 +34,7 @@ impl Default for Event {
 pub struct Midi {
     /// Beats per minute.
     pub tempo: f32,
-    /// Events happened in a tempo
+    /// Events happened in a tempo.
     pub events: Vec<Event>,
 }
 impl Midi {
@@ -59,5 +59,6 @@ pub type Bytes = Vec<u8>;
 pub const VERSION: u16 = 0x0001;
 
 /// Magic number.
+///
 /// ASCII: QMid
 pub const MAGIC: &[u8] = &[0x51, 0x4D, 0x69, 0x64];
