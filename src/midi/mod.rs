@@ -1,13 +1,15 @@
 //! A simple parser for custom MIDI files.
 
 pub(crate) mod deserializer;
+pub(crate) mod macros;
 pub(crate) mod player;
 pub(crate) mod serializer;
 pub(crate) mod types;
 pub use deserializer::deserialize;
+pub use macros::{event, event_const, midi, midi_const};
 pub use player::MidiPlayer;
 pub use serializer::serialize;
-pub use types::{Event, Midi, Note};
+pub use types::{Event, EventRaw, Midi, MidiRaw, Note};
 
 #[cfg(test)]
 mod tests {
