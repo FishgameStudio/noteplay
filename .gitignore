@@ -1,1 +1,3 @@
 /target
+/bin_output
+Cargo.lock
