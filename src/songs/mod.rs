@@ -65,3 +65,38 @@ pub const LITTLE_STAR: MidiRaw = midi_const!(
     event_const!(1.0, [("G3", 1.0), ("D5", 1.0)]),
     event_const!(1.0, [("C3", 2.0), ("C5", 2.0)]),
 );
+
+/// Song: *Birthday Song*
+///
+/// Play this on your friend's birthday!
+pub const BIRTHDAY_SONG: MidiRaw = midi_const!(
+    80.0,
+    event_const!(0.0, [("G5", 0.7)]),
+    event_const!(0.7, [("G5", 0.3)]),
+    event_const!(0.3, [("A5", 1.0), ("C5", 1.0)]),
+    event_const!(1.0, [("G5", 1.0), ("E5", 1.0), ("G5", 1.0)]),
+    event_const!(1.0, [("C6", 1.0), ("E5", 1.0), ("G5", 1.0)]),
+    event_const!(1.0, [("B5", 2.0), ("D5", 1.0)]),
+    event_const!(1.0, [("F5", 2.0), ("G5", 1.0)]),
+    event_const!(1.0, [("G5", 0.7), ("F5", 2.0), ("G5", 1.0)]),
+    event_const!(0.7, [("G5", 0.3)]),
+    event_const!(0.3, [("A5", 1.0), ("B4", 1.0)]),
+    event_const!(1.0, [("G5", 1.0), ("F5", 2.0), ("G5", 1.0)]),
+    event_const!(1.0, [("D6", 1.0), ("F5", 2.0), ("G5", 1.0)]),
+    event_const!(1.0, [("C6", 2.0), ("C5", 1.0)]),
+    event_const!(1.0, [("E5", 1.0), ("G5", 1.0)]),
+    event_const!(1.0, [("G5", 0.7), ("E5", 1.0), ("G5", 1.0)]),
+    event_const!(0.7, [("G5", 0.3)]),
+    event_const!(0.3, [("G6", 1.0), ("E5", 1.0)]),
+    event_const!(1.0, [("E6", 1.0), ("G5", 1.0), ("C6", 1.0)]),
+    event_const!(1.0, [("C6", 0.7), ("G5", 1.0), ("C6", 1.0)]),
+    event_const!(0.7, [("C6", 0.3)]),
+    event_const!(0.3, [("B5", 1.0), ("D5", 1.0)]),
+    event_const!(1.0, [("A5", 1.0), ("F5", 1.0)]),
+    event_const!(1.0, [("F6", 0.7), ("A5", 1.0), ("D6", 1.0)]),
+    event_const!(0.7, [("F6", 0.3)]),
+    event_const!(0.3, [("E6", 1.0), ("E5", 2.0), ("G5", 2.0), ("C6", 2.0)]),
+    event_const!(1.0, [("C6", 1.0)]),
+    event_const!(1.0, [("D6", 1.0), ("B4", 1.0), ("F5", 1.0), ("G5", 1.0)]),
+    event_const!(1.0, [("C6", 5.0), ("C5", 5.0), ("E5", 5.0), ("G5", 5.0)]),
+);
