@@ -6,7 +6,7 @@ pub(crate) mod player;
 pub(crate) mod serializer;
 pub(crate) mod types;
 pub use deserializer::deserialize;
-pub use macros::{event, event_const, midi, midi_const};
+pub use macros::{event, event_const, midi, midi_const, repeat};
 pub use player::MidiPlayer;
 pub use serializer::serialize;
 pub use types::{Event, EventRaw, Midi, MidiRaw, Note};
