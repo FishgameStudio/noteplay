@@ -16,10 +16,16 @@
 #![warn(clippy::unimplemented)]
 #![warn(clippy::semicolon_if_nothing_returned)]
 
-//! # Noteplay: Note Player for Rust
-//! **Noteplay** is a simple library for generating sine-wave musical notes.
-//! Supports scientific pitch notation (C0–B8, sharps `#` / flats `b`),
-//! synchronous blocking playback through your speaker.
+//! # Noteplay: Note & Midi Player for Rust
+//! **Noteplay** is a Rust crate for turning
+//! musical notes and simple arrangements into
+//! sound. It can play individual notes through
+//! the system's default audio output, schedule
+//! notes together into chords and sequences, and
+//! play short songs at a chosen tempo. It's
+//! intended as a straightforward starting point
+//! for adding musical playback to Rust projects -
+//! not as a full digital audio workstation.
 
 pub mod core;
 pub mod midi;
