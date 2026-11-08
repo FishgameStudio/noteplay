@@ -2,10 +2,9 @@
 
 use noteplay::core::NotePlayer;
 use noteplay::midi::*;
-use noteplay::songs::BIRTHDAY_SONG;
+use noteplay::songs::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    MidiPlayer::play(&BIRTHDAY_SONG.to_runtime(), &NotePlayer::new()?);
-
+    MidiPlayer::play(&ODE_TO_JOY.to_runtime(), &NotePlayer::new()?);
     Ok(())
 }
