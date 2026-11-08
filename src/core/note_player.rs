@@ -143,4 +143,13 @@ impl NotePlayer {
         }
         std::thread::sleep(Duration::from_secs_f32(sec));
     }
+    /// Wait got seconds.
+    /// # Panics
+    /// If the seconds are nagative.
+    pub fn rest_panic(sec: f32) {
+        if sec < 0.0 {
+            panic!("'{sec}' is not a valid number of seconds");
+        }
+        std::thread::sleep(Duration::from_secs_f32(sec));
+    }
 }

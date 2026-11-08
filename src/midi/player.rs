@@ -32,13 +32,19 @@ impl MidiPlayer {
     /// Block current thread until finish.
     /// Notes are played for 95% of their specified duration to add a short articulation gap
     /// without shifting event start times.
+    ///
+    /// # Panics
+    /// If the Midi is invalid.
     pub fn play(midi: &Midi, np: &NotePlayer) {
+        // Validate
+        assert!(midi.tempo > 20.0, "Tempo too low");
+
         let sec_per_beat = 60.0 / midi.tempo;
 
         for event in &midi.events {
             // wait delta beats
             let wait_sec = event.delta_beat * sec_per_beat;
-            NotePlayer::rest(wait_sec);
+            NotePlayer::rest_panic(wait_sec);
 
             // spawn all notes in this event (async together)
             for (freq, dur_beat) in &event.notes {
@@ -47,7 +53,7 @@ impl MidiPlayer {
             }
         }
 
-        NotePlayer::rest(remaining_playback_beats(&midi.events) * sec_per_beat);
+        NotePlayer::rest_panic(remaining_playback_beats(&midi.events) * sec_per_beat);
     }
 }
 
