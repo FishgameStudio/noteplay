@@ -35,7 +35,7 @@ noteplay = { version = "0.1.0", features = ["full"] }
 
 ### Usage
 
-```rust
+```rust,no_run
 use noteplay::songs::*;
 use noteplay::midi::MidiPlayer;
 use noteplay::core::NotePlayer;

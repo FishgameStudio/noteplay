@@ -27,6 +27,10 @@
 //! for adding musical playback to Rust projects -
 //! not as a full digital audio workstation.
 
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;
+
 pub mod core;
 pub mod midi;
 #[cfg(feature = "songs")]
