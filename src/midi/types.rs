@@ -73,6 +73,16 @@ impl Midi {
     pub const fn with_events(events: Vec<Event>) -> Self {
         Self { tempo: 0.0, events }
     }
+    /// Transposition: take self, return a new sequence with all notes shifted by semitone offset.
+    pub fn transposed(mut self, offset: i32) -> Self {
+        let factor = (offset as f32 / 12.0).exp2();
+        for e in &mut self.events {
+            for note in &mut e.notes {
+                note.0 *= factor;
+            }
+        }
+        self
+    }
 }
 impl Default for Midi {
     fn default() -> Self {
