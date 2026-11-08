@@ -1,0 +1,55 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_ENCODED_RUSTFLAGS: "-D warnings"
+
+jobs:
+  check:
+    name: Format & Clippy
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Check format
+        run: cargo fmt --all -- --check
+      - name: Clippy lint
+        run: cargo clippy --all-targets --all-features --locked
+
+  test:
+    name: Build & Test
+    runs-on: windows-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --all-features --locked
+      - name: Test (unit + doctest，包含README doctest)
+        run: cargo test --all-features --locked
+
+  doc:
+    name: Doc build
+    runs-on: windows-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Build docs
+        run: cargo doc --all-features --no-deps --locked
