@@ -5,6 +5,7 @@
 ![Crates.io](https://img.shields.io/crates/v/noteplay)
 ![Downloads](https://img.shields.io/crates/d/noteplay)
 ![License](https://img.shields.io/crates/l/noteplay)
+![BuildStatus](https://img.shields.io/github/actions/workflow/status/FishgameStudio/noteplay/WORKFLOW.yml)
 
 **Noteplay** is a Rust crate for turning musical notes and simple arrangements into sound. It can play individual notes through the system's default audio output, schedule notes together into chords and sequences, and play short songs at a chosen tempo. It's intended as a straightforward starting point for adding musical playback to Rust projects - not as a full digital audio workstation.
 
