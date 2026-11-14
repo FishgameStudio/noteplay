@@ -49,6 +49,10 @@ fn main() {
 The module `songs` included in the feature `songs`.
 Click [here](https://doc.rs/noteplay/latest/noteplay) to view the full documentation.
 
+## 🤝 Contributing
+
+Contributions are highly appreciated! To contribute to this project, please read the [contributing guide](CONTRIBUTING.md) before opening a pull request.
+
 ## 📃 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
