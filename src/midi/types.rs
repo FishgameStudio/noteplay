@@ -1,13 +1,18 @@
 //! Main definition of the structure.
 
+use crate::core::{
+    Frequency,
+    types::{Semitones, Tempo},
+};
+
 /// Runtime note: (frequency Hz, duration beat).
 /// This is an alias of two [`f32`] types.
-pub type Note = (f32, f32);
+pub type Note = (Frequency, f32);
 
 /// Const-static raw note: (semi offset, duration beat).
 /// A4 = 0. Convert to [`Note`] at runtime with semi2freq.
 #[derive(Debug, Clone, Copy)]
-pub struct RawNote(pub i32, pub f32);
+pub struct RawNote(pub Semitones, pub f32);
 
 /// A storage of an event in a tempo.
 #[derive(Debug, PartialEq, Clone)]
@@ -50,35 +55,38 @@ impl Default for Event {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Midi {
     /// Beats per minute.
-    pub tempo: f32,
+    pub tempo: Tempo,
     /// Events happend in a beat.
     pub events: Vec<Event>,
 }
 impl Midi {
     /// Create a new [`Midi`] object.
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
-            tempo: 0.0,
+            tempo: Tempo::new_unchecked(0.0),
             events: vec![],
         }
     }
     /// Create a new [`Midi`] object with given `tempo`.
-    pub const fn with_tempo(tempo: f32) -> Self {
+    pub const fn with_tempo(tempo: Tempo) -> Self {
         Self {
             tempo,
             events: vec![],
         }
     }
     /// Create a new [`Midi`] object with given `events`.
-    pub const fn with_events(events: Vec<Event>) -> Self {
-        Self { tempo: 0.0, events }
+    pub fn with_events(events: Vec<Event>) -> Self {
+        Self {
+            tempo: Tempo::new_unchecked(0.0),
+            events,
+        }
     }
     /// Transposition: take self, return a new sequence with all notes shifted by semitone offset.
     pub fn transposed(mut self, offset: i32) -> Self {
         let factor = (offset as f32 / 12.0).exp2();
         for e in &mut self.events {
             for note in &mut e.notes {
-                note.0 *= factor;
+                note.0.set_freq_unchecked(note.0.get_freq() * factor);
             }
         }
         self
@@ -151,7 +159,7 @@ impl<'a> MidiRaw<'a> {
     /// Convert to a runtime type [`Midi`].
     pub fn to_runtime(self) -> Midi {
         Midi {
-            tempo: self.tempo,
+            tempo: Tempo::new_unchecked(self.tempo),
             events: self.events.iter().map(|er| er.to_runtime()).collect(),
         }
     }
@@ -164,8 +172,8 @@ impl<'a> Default for MidiRaw<'a> {
 
 /// Convert semi offset (A4 = 0) to frequency Hz.
 /// Runtime only, precise, uses standard library exp2.
-pub fn semi2freq(semi: i32) -> f32 {
-    440.0 * (semi as f32 / 12.0).exp2()
+pub fn semi2freq(semi: i32) -> Frequency {
+    Frequency::new_unchecked(440.0 * (semi as f32 / 12.0).exp2())
 }
 
 /// Bytes.

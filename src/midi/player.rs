@@ -1,6 +1,7 @@
 //! Player for deserialized structure.
 use crate::core::note_player::NotePlayer;
 use crate::midi::types::{Event, Midi};
+use std::time::Duration;
 
 const NOTE_DURATION_FACTOR: f32 = 0.95;
 
@@ -37,30 +38,33 @@ impl MidiPlayer {
     /// If the Midi is invalid.
     pub fn play(midi: &Midi, np: &NotePlayer) {
         // Validate
-        assert!(midi.tempo > 20.0, "Tempo too low");
+        assert!(midi.tempo.get_tempo() > 20.0, "Tempo too low");
 
-        let sec_per_beat = 60.0 / midi.tempo;
+        let sec_per_beat = 60.0 / midi.tempo.get_tempo();
 
         for event in &midi.events {
             // wait delta beats
-            let wait_sec = event.delta_beat * sec_per_beat;
-            NotePlayer::rest_panic(wait_sec);
+            let wait_sec = Duration::from_secs_f32(event.delta_beat * sec_per_beat);
+            NotePlayer::rest(wait_sec);
 
             // spawn all notes in this event (async together)
             for (freq, dur_beat) in &event.notes {
-                let dur_sec = articulated_duration_beats(*dur_beat) * sec_per_beat;
+                let dur_sec =
+                    Duration::from_secs_f32(articulated_duration_beats(*dur_beat) * sec_per_beat);
                 np.play_freq_async(*freq, dur_sec);
             }
         }
 
-        NotePlayer::rest_panic(remaining_playback_beats(&midi.events) * sec_per_beat);
+        NotePlayer::rest(Duration::from_secs_f32(
+            remaining_playback_beats(&midi.events) * sec_per_beat,
+        ));
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{articulated_duration_beats, remaining_playback_beats};
-    use crate::midi::types::Event;
+    use crate::{core::Frequency, midi::types::Event};
 
     #[test]
     fn note_articulation_shortens_duration_without_changing_beats() {
@@ -72,11 +76,11 @@ mod tests {
     fn playback_wait_includes_notes_that_outlast_later_events() {
         let events = [
             Event {
-                notes: vec![(440.0, 4.0)],
+                notes: vec![(Frequency::new_unchecked(440.0), 4.0)],
                 delta_beat: 0.0,
             },
             Event {
-                notes: vec![(880.0, 0.5)],
+                notes: vec![(Frequency::new_unchecked(880.0), 0.5)],
                 delta_beat: 1.0,
             },
         ];

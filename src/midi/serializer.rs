@@ -14,7 +14,7 @@ pub fn serialize(midi: Midi) -> Bytes {
     let mut header: Bytes = vec![];
     header.extend(MAGIC);
     header.extend(&VERSION.to_le_bytes());
-    header.extend(&midi.tempo.to_le_bytes());
+    header.extend(&midi.tempo.get_tempo().to_le_bytes());
     header.extend(&(midi.events.len() as u32).to_le_bytes());
 
     buf.extend(header);
@@ -30,7 +30,7 @@ pub fn serialize(midi: Midi) -> Bytes {
         event_buffer.extend(&event.delta_beat.to_le_bytes());
         event_buffer.extend(&(event.notes.len() as u32).to_le_bytes());
         for note in &event.notes {
-            event_buffer.extend(&note.0.to_le_bytes());
+            event_buffer.extend(&note.0.get_freq().to_le_bytes());
             event_buffer.extend(&note.1.to_le_bytes());
         }
         buf.extend(event_buffer);

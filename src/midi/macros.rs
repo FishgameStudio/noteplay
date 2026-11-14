@@ -46,11 +46,11 @@ macro_rules! event {
 macro_rules! midi {
     () => {{ $crate::midi::Midi::new() }};
     ($tempo:expr) => {{
-        $crate::midi::Midi::with_tempo($tempo)
+        $crate::midi::Midi::with_tempo($crate::core::Tempo::new_unchecked($tempo))
     }};
     ($tempo:expr,$($event:expr),*$(,)?) => {{
         $crate::midi::Midi {
-            tempo: $tempo,
+            tempo: $crate::core::Tempo::new_unchecked($tempo),
             events: vec![$(
                 $event
             ),*]

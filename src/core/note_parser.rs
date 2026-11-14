@@ -1,9 +1,13 @@
 //! Parser for the musical note.
 
+use crate::core::types::Semitones;
+
+use super::Frequency;
+
 /// Parse note and give a frequency.
 /// # Panics
 /// If the format of the note is invalid.
-pub fn note2freq(note: &str) -> f32 {
+pub fn note2freq(note: &str) -> Frequency {
     let note = note.trim().to_ascii_uppercase(); // All uppercase
     let mut chars = note.chars().peekable();
     let base = chars
@@ -37,7 +41,7 @@ pub fn note2freq(note: &str) -> f32 {
     let n = semitone + alter;
     let total = n + (octave - 4) * 12 - 9;
 
-    440.0 * ((total as f32) / 12.0).exp2()
+    Frequency::new_unchecked(440.0 * ((total as f32) / 12.0).exp2())
 }
 
 /// Parse scientific pitch notation ("C4", "A#4", "Db5") into semitone offset (A4 = 0).
@@ -45,7 +49,7 @@ pub fn note2freq(note: &str) -> f32 {
 ///
 /// # Panics
 /// Invalid byte format, unknown base note, bad octave digit.
-pub const fn note2semi(note: &str) -> i32 {
+pub const fn note2semi(note: &str) -> Semitones {
     let b = note.as_bytes();
     let len = b.len();
     assert!(len >= 2, "note string too short");
@@ -92,8 +96,8 @@ pub const fn note2semi(note: &str) -> i32 {
 }
 
 /// Runtime: convert semi offset(A4=0) to exact frequency Hz
-pub fn semi2freq(semi: i32) -> f32 {
-    440.0 * (semi as f32 / 12.0).exp2()
+pub fn semi2freq(semi: Semitones) -> Frequency {
+    Frequency::new_unchecked(440.0 * (semi as f32 / 12.0).exp2())
 }
 
 #[cfg(test)]
@@ -107,13 +111,13 @@ mod tests {
     #[test]
     fn test_note2freq() {
         const EPS: f32 = 0.2;
-        assert!(approx_eq(note2freq("A4"), 440.00, EPS));
-        assert!(approx_eq(note2freq("C5"), 523.2511, EPS));
-        assert!(approx_eq(note2freq("G4"), 391.9954, EPS));
-        assert!(approx_eq(note2freq("B6"), 1975.5332, EPS));
-        assert!(approx_eq(note2freq("E4"), 329.6276, EPS));
-        assert!(approx_eq(note2freq("Eb4"), 311.127, EPS));
-        assert!(approx_eq(note2freq("G#5"), 830.6094, EPS));
+        assert!(approx_eq(note2freq("A4").get_freq(), 440.00, EPS));
+        assert!(approx_eq(note2freq("C5").get_freq(), 523.2511, EPS));
+        assert!(approx_eq(note2freq("G4").get_freq(), 391.9954, EPS));
+        assert!(approx_eq(note2freq("B6").get_freq(), 1975.5332, EPS));
+        assert!(approx_eq(note2freq("E4").get_freq(), 329.6276, EPS));
+        assert!(approx_eq(note2freq("Eb4").get_freq(), 311.127, EPS));
+        assert!(approx_eq(note2freq("G#5").get_freq(), 830.6094, EPS));
     }
 
     #[test]

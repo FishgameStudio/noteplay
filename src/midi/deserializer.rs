@@ -1,16 +1,20 @@
 //! Binary deserailizer.
 
+use crate::Error;
+use crate::core::Frequency;
+use crate::core::types::Tempo;
+use crate::midi::Note;
 use crate::midi::types::{Bytes, Event, MAGIC, Midi, VERSION};
 
-use std::io::{Cursor, Error, ErrorKind, Read};
+use std::io::{Cursor, Read};
 
-/// Deserialize binary which serialized with function [`serialize`](crate::midi::serialize).
+/// Deserialize binary which serialized with function [`serialize()`](crate::midi::serialize).
 /// # Errors
 /// If the format is invalid.
-pub fn deserialize(bin: Bytes) -> Result<Midi, Box<dyn std::error::Error>> {
+pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
     #[inline]
     fn error(msg: &str) -> Result<Midi, Error> {
-        Err(Error::new(ErrorKind::InvalidData, msg))
+        Err(Error::InvalidData(msg.to_string()))
     }
 
     let mut r = Cursor::new(&bin);
@@ -52,7 +56,7 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Box<dyn std::error::Error>> {
         r.read_exact(&mut note_cnt_buf)?;
         let note_count = u32::from_le_bytes(note_cnt_buf);
 
-        let mut notes = Vec::with_capacity(note_count as usize);
+        let mut notes: Vec<Note> = Vec::with_capacity(note_count as usize);
         for _ in 0..note_count {
             let mut freq_buf = [0u8; 4];
             r.read_exact(&mut freq_buf)?;
@@ -62,10 +66,13 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Box<dyn std::error::Error>> {
             r.read_exact(&mut dur_buf)?;
             let dur = f32::from_le_bytes(dur_buf);
 
-            notes.push((freq, dur));
+            notes.push((Frequency::new_unchecked(freq), dur));
         }
         events.push(Event { notes, delta_beat });
     }
 
-    Ok(Midi { tempo, events })
+    Ok(Midi {
+        tempo: Tempo::new_unchecked(tempo),
+        events,
+    })
 }

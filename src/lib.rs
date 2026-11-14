@@ -35,3 +35,47 @@ pub mod core;
 pub mod midi;
 #[cfg(feature = "songs")]
 pub mod songs;
+
+/// Top-level error type for this crate.
+///
+/// This error type is returned by all fallible public functions in the crate.
+/// Use pattern matching to inspect variants, or [`source()`](std::error::Error::source)
+/// to access the underlying cause.
+///
+/// # Example
+/// ```
+/// # use noteplay::{Error};
+/// # const fn do_something() -> Result<(), Error> {
+/// #     Err(Error::InvalidFloat(1.0))
+/// # }
+/// # fn main() {
+/// match do_something() {
+///     Ok(_) => {}
+///     Err(Error::Io(e)) => { eprintln!("IO Error: {e}") }
+///     Err(Error::ParseInt(e)) => { eprintln!("Error when parsing integers: {e}") }
+///     Err(e) => { eprintln!("Other error: {e}") }
+/// }
+/// # }
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum Error {
+    /// Failed to do IO operations.
+    #[error("IO Error: {0}")]
+    Io(#[from] std::io::Error),
+    /// Failed to parse an integer.
+    #[error("Error while parsing an integer: {0}")]
+    ParseInt(#[from] std::num::ParseIntError),
+    /// Failed to parse a floating point number.
+    #[error("Error while parsing a floating point number: {0}")]
+    ParseFloat(#[from] std::num::ParseFloatError),
+    /// The provided floating point number didn't meet the requirements.
+    #[error("The provided floating point number didn't meet the requirements: {0}")]
+    InvalidFloat(f32),
+    /// Invalid data provided.
+    #[error("Invalid data provided: {0}")]
+    InvalidData(String),
+    /// Failed to open device default sink.
+    #[error("Failed to open device default sink: {0}")]
+    OpenDefaultSink(#[from] rodio::DeviceSinkError),
+}

@@ -13,12 +13,17 @@ pub use types::{Event, EventRaw, Midi, MidiRaw, Note};
 
 #[cfg(test)]
 mod tests {
+    use crate::core::types::{Frequency, Tempo};
+
     use super::deserializer::deserialize;
     use super::serializer::serialize;
     use super::types::{Event, MAGIC, Midi, VERSION};
 
     fn assert_midi_eq(expected: &Midi, actual: &Midi) {
-        assert_eq!(expected.tempo.to_bits(), actual.tempo.to_bits());
+        assert_eq!(
+            expected.tempo.get_tempo().to_bits(),
+            actual.tempo.get_tempo().to_bits()
+        );
         assert_eq!(expected.events.len(), actual.events.len());
         for (expected_event, actual_event) in expected.events.iter().zip(&actual.events) {
             assert_eq!(
@@ -28,7 +33,10 @@ mod tests {
             assert_eq!(expected_event.notes.len(), actual_event.notes.len());
             for (expected_note, actual_note) in expected_event.notes.iter().zip(&actual_event.notes)
             {
-                assert_eq!(expected_note.0.to_bits(), actual_note.0.to_bits());
+                assert_eq!(
+                    expected_note.0.get_freq().to_bits(),
+                    actual_note.0.get_freq().to_bits()
+                );
                 assert_eq!(expected_note.1.to_bits(), actual_note.1.to_bits());
             }
         }
@@ -45,18 +53,21 @@ mod tests {
     #[test]
     fn midi_with_mixed_events_round_trips_and_has_expected_binary_layout() {
         let midi = Midi {
-            tempo: 123.5,
+            tempo: Tempo::new_unchecked(123.5),
             events: vec![
                 Event {
                     notes: vec![],
                     delta_beat: 0.0,
                 },
                 Event {
-                    notes: vec![(440.0, 0.25), (261.625, 1.5)],
+                    notes: vec![
+                        (Frequency::new_unchecked(440.0), 0.25),
+                        (Frequency::new_unchecked(261.625), 1.5),
+                    ],
                     delta_beat: 0.5,
                 },
                 Event {
-                    notes: vec![(880.0, 0.125)],
+                    notes: vec![(Frequency::new_unchecked(880.0), 0.125)],
                     delta_beat: 2.0,
                 },
             ],
@@ -89,18 +100,21 @@ mod tests {
         let actual = deserialize(bin).unwrap();
         assert_midi_eq(
             &Midi {
-                tempo: 123.5,
+                tempo: Tempo::new_unchecked(123.5),
                 events: vec![
                     Event {
                         notes: vec![],
                         delta_beat: 0.0,
                     },
                     Event {
-                        notes: vec![(440.0, 0.25), (261.625, 1.5)],
+                        notes: vec![
+                            (Frequency::new_unchecked(440.0), 0.25),
+                            (Frequency::new_unchecked(261.625), 1.5),
+                        ],
                         delta_beat: 0.5,
                     },
                     Event {
-                        notes: vec![(880.0, 0.125)],
+                        notes: vec![(Frequency::new_unchecked(880.0), 0.125)],
                         delta_beat: 2.0,
                     },
                 ],

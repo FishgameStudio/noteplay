@@ -19,3 +19,4 @@ path = "src/test.rs"
 
 [dependencies]
 rodio = "0.23.0"
+thiserror = "2.0.21"

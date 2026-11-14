@@ -1,8 +1,16 @@
+use crate::Error;
+use crate::core::Frequency;
 use crate::core::note_parser::note2freq;
 use rodio::mixer::Mixer;
 use rodio::source::{SineWave, Source};
 use rodio::{DeviceSinkBuilder, MixerDeviceSink};
 use std::time::Duration;
+
+/// Addition for a [`Duration`] and a [`f32`].
+#[inline]
+fn dur_add_f32(d: Duration, sec: f32) -> Duration {
+    d + Duration::from_secs_f32(sec)
+}
 
 /// The note player.
 pub struct NotePlayer {
@@ -12,7 +20,7 @@ pub struct NotePlayer {
 
 impl std::fmt::Debug for NotePlayer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Noteplayer").finish_non_exhaustive()
+        f.debug_struct("NotePlayer").finish_non_exhaustive()
     }
 }
 
@@ -20,7 +28,7 @@ impl NotePlayer {
     /// Create a new [`NotePlayer`] object.
     /// # Errors
     /// If failed to open the default sink.
-    pub fn new() -> Result<Self, rodio::DeviceSinkError> {
+    pub fn new() -> Result<Self, Error> {
         let mut handle = DeviceSinkBuilder::open_default_sink()?;
         handle.log_on_drop(false);
         let mixer = handle.mixer().clone();
@@ -35,19 +43,20 @@ impl NotePlayer {
     /// If the frequency isn't greater than 0.
     /// # Example
     /// ```no_run
-    /// # use noteplay::core::NotePlayer;
+    /// # use noteplay::core::{NotePlayer, Frequency};
     /// # use std::time::Duration;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
+    /// let secs = Duration::from_secs_f32(0.5);
     /// // Play A4 for 0.5 seconds.
-    /// p.play_freq_async(440.0, 0.5);
-    /// std::thread::sleep(Duration::from_secs_f32(0.5));
+    /// p.play_freq_async(Frequency::new_unchecked(440.0), secs);
+    /// std::thread::sleep(secs);
     /// # Ok(())
     /// # }
     /// ```
-    pub fn play_freq_async(&self, freq: f32, sec: f32) {
-        assert!(freq > 0.0, "Frequency must be greater than 0");
-        let source = SineWave::new(freq).take_duration(Duration::from_secs_f32(sec));
+    pub fn play_freq_async(&self, freq: Frequency, sec: Duration) {
+        assert!(freq.get_freq() >= 0.0, "Frequency must be greater than 0");
+        let source = SineWave::new(freq.get_freq()).take_duration(sec);
         self.mixer.add(source);
     }
 
@@ -56,18 +65,18 @@ impl NotePlayer {
     /// If the frequency isn't greater than 0.
     /// # Example
     /// ```no_run
-    /// # use noteplay::core::NotePlayer;
+    /// # use noteplay::core::{NotePlayer, Frequency};
     /// # use std::time::Duration;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
     /// // Play A4 for 0.5 seconds.
-    /// p.play_freq(440.0, 0.5);
+    /// p.play_freq(Frequency::new_unchecked(440.0), Duration::from_secs_f32(0.5));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn play_freq(&self, freq: f32, sec: f32) {
+    pub fn play_freq(&self, freq: Frequency, sec: Duration) {
         self.play_freq_async(freq, sec);
-        std::thread::sleep(Duration::from_secs_f32(sec + 0.05)); // Pause for a moment
+        std::thread::sleep(dur_add_f32(sec, 0.05)); // Pause for a moment
     }
 
     /// **Asynchronous** play a specified note within given seconds.
@@ -84,13 +93,14 @@ impl NotePlayer {
     /// # use std::time::Duration;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
+    /// let secs = Duration::from_secs_f32(0.5);
     /// // Play A4 for 0.5 seconds.
-    /// p.play_note_async("A4", 0.5);
-    /// std::thread::sleep(Duration::from_secs_f32(0.5));
+    /// p.play_note_async("A4", secs);
+    /// std::thread::sleep(secs);
     /// # Ok(())
     /// # }
     /// ```
-    pub fn play_note_async(&self, note: &str, sec: f32) {
+    pub fn play_note_async(&self, note: &str, sec: Duration) {
         self.play_freq_async(note2freq(note), sec);
     }
 
@@ -105,14 +115,15 @@ impl NotePlayer {
     /// # Example
     /// ```no_run
     /// # use noteplay::core::NotePlayer;
+    /// # use std::time::Duration;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let p = NotePlayer::new()?;
     /// // Play A4 for 0.5 seconds.
-    /// p.play_note("A4", 0.5);
+    /// p.play_note("A4", Duration::from_secs_f32(0.5));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn play_note(&self, note: &str, sec: f32) {
+    pub fn play_note(&self, note: &str, sec: Duration) {
         self.play_freq(note2freq(note), sec);
     }
 
@@ -120,7 +131,7 @@ impl NotePlayer {
     ///
     /// # Panics
     /// If the frequency isn't greater than 0.
-    pub fn repeat_freq(&self, freq: f32, sec: f32, repetitions: u64) {
+    pub fn repeat_freq(&self, freq: Frequency, sec: Duration, repetitions: u64) {
         for _ in 0..repetitions {
             self.play_freq(freq, sec);
         }
@@ -130,26 +141,13 @@ impl NotePlayer {
     ///
     /// # Panics
     /// If the frequency isn't greater than 0.
-    pub fn repeat_note(&self, note: &str, sec: f32, repetitions: u64) {
+    pub fn repeat_note(&self, note: &str, sec: Duration, repetitions: u64) {
         for _ in 0..repetitions {
             self.play_note(note, sec);
         }
     }
     /// Wait for seconds.
-    /// It will not panic if the seconds are nagative.
-    pub fn rest(sec: f32) {
-        if sec <= 0.0 {
-            return;
-        }
-        std::thread::sleep(Duration::from_secs_f32(sec));
-    }
-    /// Wait got seconds.
-    /// # Panics
-    /// If the seconds are nagative.
-    pub fn rest_panic(sec: f32) {
-        if sec < 0.0 {
-            panic!("'{sec}' is not a valid number of seconds");
-        }
-        std::thread::sleep(Duration::from_secs_f32(sec));
+    pub fn rest(sec: Duration) {
+        std::thread::sleep(sec);
     }
 }
