@@ -1,5 +1,6 @@
 //! Main type definitions.
 
+use num_enum::TryFromPrimitive;
 use rodio::Source;
 use rustysynth::{Synthesizer, SynthesizerSettings};
 use std::num::NonZero;
@@ -8,7 +9,8 @@ use std::time::Duration;
 /// Enumeration of musical instruments.
 ///
 /// The values of the enumerations follow GM Level 1 standards.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
+#[repr(i32)]
 #[allow(missing_docs)] // These enumerations don't even need to be documented, right?
 pub enum Timbre {
     /// Default sine wave

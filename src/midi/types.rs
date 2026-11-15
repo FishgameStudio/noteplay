@@ -1,18 +1,20 @@
 //! Main definition of the structure.
 
-use crate::core::{
-    Frequency,
-    types::{Semitones, Tempo},
+use crate::{
+    core::{
+        Frequency,
+        types::{Semitones, Tempo},
+    },
+    soundfont::Timbre,
 };
 
-/// Runtime note: (frequency Hz, duration beat).
-/// This is an alias of two [`f32`] types.
-pub type Note = (Frequency, f32);
+/// Runtime note: (frequency Hz, duration beat, Timbre, velocity).
+pub type Note = (Frequency, f32, Timbre, i32);
 
-/// Const-static raw note: (semi offset, duration beat).
+/// Const-static raw note: (semi offset, duration beat, Timbre, velocity).
 /// A4 = 0. Convert to [`Note`] at runtime with semi2freq.
 #[derive(Debug, Clone, Copy)]
-pub struct RawNote(pub Semitones, pub f32);
+pub struct RawNote(pub Semitones, pub f32, pub Timbre, pub i32);
 
 /// A storage of an event in a beat.
 #[derive(Debug, PartialEq, Clone)]
@@ -123,7 +125,7 @@ impl<'a> EventRaw<'a> {
         let notes: Vec<Note> = self
             .notes
             .iter()
-            .map(|&RawNote(semi, dur)| (semi2freq(semi), dur))
+            .map(|&RawNote(semi, dur, timbre, velocity)| (semi2freq(semi), dur, timbre, velocity))
             .collect();
         Event {
             notes,
@@ -180,7 +182,7 @@ pub fn semi2freq(semi: i32) -> Frequency {
 pub type Bytes = Vec<u8>;
 
 /// Version.
-pub const VERSION: u16 = 0x0001;
+pub const VERSION: u16 = 0x0002;
 
 /// Magic number.
 ///

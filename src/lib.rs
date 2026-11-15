@@ -101,6 +101,9 @@ pub enum Error {
     /// Try to apply default timbre while soundfont processing.
     #[error("Try to apply default timbre while soundfont processing")]
     TryToApplyDefaultTimbre,
+    /// Unknwon timbre identifier number while deserializing.
+    #[error("Unknwon timbre identifier number while deserializing: {0}")]
+    UnknownTimbreNum(i32),
 }
 
 #[cfg(test)]

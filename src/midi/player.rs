@@ -15,7 +15,7 @@ fn remaining_playback_beats(events: &[Event]) -> f32 {
 
     for event in events {
         elapsed_beats += event.delta_beat;
-        for (_, duration) in &event.notes {
+        for (_, duration, _, _) in &event.notes {
             latest_note_end =
                 latest_note_end.max(elapsed_beats + articulated_duration_beats(*duration));
         }
@@ -35,10 +35,11 @@ impl MidiPlayer {
     /// without shifting event start times.
     ///
     /// # Panics
-    /// If the Midi is invalid.
-    pub fn play(midi: &Midi, np: &NotePlayer) {
+    /// If the Midi is invalid or the [`NotePlayer`] didn't be initialized soundfont.
+    pub fn play(midi: &Midi, np: &mut NotePlayer) {
         // Validate
         assert!(midi.tempo.get_tempo() > 20.0, "Tempo too low");
+        assert!(np.synth.is_some() && np.synth_settings.is_some());
 
         let sec_per_beat = 60.0 / midi.tempo.get_tempo();
 
@@ -48,10 +49,11 @@ impl MidiPlayer {
             NotePlayer::rest(wait_sec);
 
             // spawn all notes in this event (async together)
-            for (freq, dur_beat) in &event.notes {
+            for (freq, dur_beat, timbre, velocity) in &event.notes {
                 let dur_sec =
                     Duration::from_secs_f32(articulated_duration_beats(*dur_beat) * sec_per_beat);
-                np.play_freq_async(*freq, dur_sec, 90); // Temporary 90
+                np.set_timbre(*timbre);
+                np.play_freq_async(*freq, dur_sec, *velocity); // Temporary 90
             }
         }
 
@@ -59,6 +61,7 @@ impl MidiPlayer {
             remaining_playback_beats(&midi.events) * sec_per_beat,
         ));
     }
+
     /// Loop play a Midi struct synchronously.
     /// Block current thread until finish.
     /// Notes are played for 95% of their specified duration to add a short articulation gap
@@ -66,7 +69,7 @@ impl MidiPlayer {
     ///
     /// # Panics
     /// If the Midi is invalid.
-    pub fn loop_play(midi: &Midi, np: &NotePlayer) -> ! {
+    pub fn loop_play(midi: &Midi, np: &mut NotePlayer) -> ! {
         loop {
             Self::play(midi, np);
         }
@@ -76,7 +79,7 @@ impl MidiPlayer {
 #[cfg(test)]
 mod tests {
     use super::{articulated_duration_beats, remaining_playback_beats};
-    use crate::{core::Frequency, midi::types::Event};
+    use crate::{core::Frequency, midi::types::Event, soundfont::Timbre};
 
     #[test]
     fn note_articulation_shortens_duration_without_changing_beats() {
@@ -88,11 +91,11 @@ mod tests {
     fn playback_wait_includes_notes_that_outlast_later_events() {
         let events = [
             Event {
-                notes: vec![(Frequency::new_unchecked(440.0), 4.0)],
+                notes: vec![(Frequency::new_unchecked(440.0), 4.0, Timbre::Default, 90)],
                 delta_beat: 0.0,
             },
             Event {
-                notes: vec![(Frequency::new_unchecked(880.0), 0.5)],
+                notes: vec![(Frequency::new_unchecked(880.0), 0.5, Timbre::Default, 90)],
                 delta_beat: 1.0,
             },
         ];

@@ -25,8 +25,8 @@ pub struct NotePlayer {
     mixer: Mixer,
     timbre: Timbre,
     sf: Option<Arc<SoundFont>>,
-    synth: Option<Arc<Mutex<Synthesizer>>>,
-    synth_settings: Option<SynthesizerSettings>,
+    pub(crate) synth: Option<Arc<Mutex<Synthesizer>>>,
+    pub(crate) synth_settings: Option<SynthesizerSettings>,
 }
 
 impl std::fmt::Debug for NotePlayer {

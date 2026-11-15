@@ -23,7 +23,25 @@ macro_rules! event {
             delta_beat: $delta,
             notes: vec![$(
                 ($crate::core::note2freq($name),
-                $dur)
+                $dur,$crate::soundfont::Timbre::BrightAcousticPiano, 100)
+            ),*],
+        }
+    }};
+    ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident)),*$(,)?]) => {{
+        $crate::midi::Event {
+            delta_beat: $delta,
+            notes: vec![$(
+                ($crate::core::note2freq($name),
+                $dur,$crate::soundfont::Timbre::$timbre, 100)
+            ),*],
+        }
+    }};
+    ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident, $velocity:expr)),*$(,)?]) => {{
+        $crate::midi::Event {
+            delta_beat: $delta,
+            notes: vec![$(
+                ($crate::core::note2freq($name),
+                $dur,$crate::soundfont::Timbre::$timbre, $velocity)
             ),*],
         }
     }};
@@ -68,7 +86,23 @@ macro_rules! event_const {
         $crate::midi::EventRaw {
             delta_beat: $delta,
             notes: &[$(
-                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur)
+                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::BrightAcousticPiano, 100)
+            ),*],
+        }
+    }};
+    ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident)),*$(,)?]) => {{
+        $crate::midi::EventRaw {
+            delta_beat: $delta,
+            notes: &[$(
+                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, 100)
+            ),*],
+        }
+    }};
+    ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident, $velocity:expr)),*$(,)?]) => {{
+        $crate::midi::EventRaw {
+            delta_beat: $delta,
+            notes: &[$(
+                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, $velocity)
             ),*],
         }
     }};

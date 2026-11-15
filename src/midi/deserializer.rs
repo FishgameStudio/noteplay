@@ -5,6 +5,7 @@ use crate::core::Frequency;
 use crate::core::types::Tempo;
 use crate::midi::Note;
 use crate::midi::types::{Bytes, Event, MAGIC, Midi, VERSION};
+use crate::soundfont::Timbre;
 
 use std::io::{Cursor, Read};
 
@@ -66,7 +67,16 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
             r.read_exact(&mut dur_buf)?;
             let dur = f32::from_le_bytes(dur_buf);
 
-            notes.push((Frequency::new_unchecked(freq), dur));
+            let mut timbre_buf = [0u8; 4];
+            r.read_exact(&mut timbre_buf)?;
+            let t = i32::from_le_bytes(timbre_buf);
+            let timbre = Timbre::try_from(t).map_err(|_| Error::UnknownTimbreNum(t))?;
+
+            let mut velocity_buf = [0u8; 4];
+            r.read_exact(&mut velocity_buf)?;
+            let velocity = i32::from_le_bytes(velocity_buf);
+
+            notes.push((Frequency::new_unchecked(freq), dur, timbre, velocity));
         }
         events.push(Event { notes, delta_beat });
     }

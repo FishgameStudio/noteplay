@@ -37,17 +37,20 @@ noteplay = { version = "0.1.0", features = ["full"] }
 ### 💡 Usage
 
 ```rust,no_run
-use noteplay::songs::*;
-use noteplay::midi::MidiPlayer;
+use noteplay::builtin_sf2::TIMGM6MB;
 use noteplay::core::NotePlayer;
+use noteplay::midi::*;
+use noteplay::songs::*;
 
-fn main() {
-    // Play "Birthday Song"
-    MidiPlayer::play(&BIRTHDAY_SONG.to_runtime(), &NotePlayer::new().unwrap());
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut np = NotePlayer::new()?;
+    np.set_soundfont_from_bytes(TIMGM6MB)?;
+    MidiPlayer::play(&BIRTHDAY_SONG.to_runtime(), &mut np);
+    Ok(())
 }
 ```
 The module `songs` included in the feature `songs`.
-Click [here](https://doc.rs/noteplay/latest/noteplay) to view the full documentation.
+Click [here](https://docs.rs/noteplay/latest/noteplay) to view the full documentation.
 
 ## 🤝 Contributing
 

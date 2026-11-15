@@ -3,6 +3,7 @@
 use crate::Error;
 use crate::core::{Frequency, note2semi};
 use crate::midi::types::{Event, Note};
+use crate::soundfont::Timbre;
 
 /// Parse chords and generate a corresponding [`Event`] that stores the chord.
 ///
@@ -16,22 +17,30 @@ use crate::midi::types::{Event, Note};
 /// # Examples
 /// ```
 /// # use noteplay::midi::parse_chord;
+/// # use noteplay::soundfont::Timbre;
 /// # fn main() {
-/// let c_maj = parse_chord("C", 4, 1.0).unwrap();
+/// let c_maj = parse_chord("C", 4, 1.0, Timbre::Default, 100).unwrap();
 /// assert_eq!(c_maj.notes.len(), 3);
-/// let cm7b5 = parse_chord("Cm7b5", 4, 1.0).unwrap();
+/// let cm7b5 = parse_chord("Cm7b5", 4, 1.0, Timbre::Default, 100).unwrap();
 /// assert_eq!(cm7b5.notes.len(), 4);
 /// # }
 /// ```
 ///
 /// ```should_panic
 /// # use noteplay::midi::parse_chord;
+/// # use noteplay::soundfont::Timbre;
 /// # fn main() {
 /// // Cannot use a 'm' after a 'sus'
-/// let _ = parse_chord("Csus4m", 4, 1.0).unwrap(); // <--- PANICS
+/// let _ = parse_chord("Csus4m", 4, 1.0, Timbre::Default, 100).unwrap(); // <--- PANICS
 /// # }
 /// ```
-pub fn parse_chord(chord: &str, root_octave: i32, dur_beat: f32) -> Result<Event, Error> {
+pub fn parse_chord(
+    chord: &str,
+    root_octave: i32,
+    dur_beat: f32,
+    timbre: Timbre,
+    velocity: i32,
+) -> Result<Event, Error> {
     if chord.is_empty() {
         return Err(Error::InvalidChord("Chord is empty".into()));
     }
@@ -190,7 +199,7 @@ pub fn parse_chord(chord: &str, root_octave: i32, dur_beat: f32) -> Result<Event
     for off in tones {
         let t = (root_semi + off) as f32 / 12.0;
         let f = 440.0 * t.exp2();
-        out.push((Frequency::new_unchecked(f), dur_beat));
+        out.push((Frequency::new_unchecked(f), dur_beat, timbre, velocity));
     }
 
     Ok(Event::with_notes(out))
@@ -204,82 +213,82 @@ mod tests {
     #[test]
     fn test_parse_chord_basic() {
         // C major
-        let ev = parse_chord("C", 4, 1.0).unwrap();
+        let ev = parse_chord("C", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // Cm minor
-        let ev = parse_chord("Cm", 4, 1.0).unwrap();
+        let ev = parse_chord("Cm", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // Csus4
-        let ev = parse_chord("Csus4", 4, 1.0).unwrap();
+        let ev = parse_chord("Csus4", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // Csus2
-        let ev = parse_chord("Csus2", 4, 1.0).unwrap();
+        let ev = parse_chord("Csus2", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // Cmaj7
-        let ev = parse_chord("Cmaj7", 4, 1.0).unwrap();
+        let ev = parse_chord("Cmaj7", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
 
         // Cm7b5
-        let ev = parse_chord("Cm7b5", 4, 1.0).unwrap();
+        let ev = parse_chord("Cm7b5", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
 
         // C7
-        let ev = parse_chord("C7", 4, 1.0).unwrap();
+        let ev = parse_chord("C7", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
 
         // Cadd9
-        let ev = parse_chord("Cadd9", 4, 1.0).unwrap();
+        let ev = parse_chord("Cadd9", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
 
         // Cdim
-        let ev = parse_chord("Cdim", 4, 1.0).unwrap();
+        let ev = parse_chord("Cdim", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // Caug
-        let ev = parse_chord("Caug", 4, 1.0).unwrap();
+        let ev = parse_chord("Caug", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // C#maj7 sharp root
-        let ev = parse_chord("C#maj7", 4, 1.0).unwrap();
+        let ev = parse_chord("C#maj7", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
 
         // CBmaj7 flat root
-        let ev = parse_chord("CBmaj7", 4, 1.0).unwrap();
+        let ev = parse_chord("CBmaj7", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
     }
 
     #[test]
     fn test_parse_chord_extended() {
         // Cmaj9
-        let ev = parse_chord("Cmaj9", 4, 1.0).unwrap();
+        let ev = parse_chord("Cmaj9", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 5);
 
         // C7b9
-        let ev = parse_chord("C7b9", 4, 1.0).unwrap();
+        let ev = parse_chord("C7b9", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 5);
 
         // C7#9
-        let ev = parse_chord("C7#9", 4, 1.0).unwrap();
+        let ev = parse_chord("C7#9", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 5);
 
         // C13
-        let ev = parse_chord("C13", 4, 1.0).unwrap();
+        let ev = parse_chord("C13", 4, 1.0, Timbre::Default, 90).unwrap();
         assert_eq!(ev.notes.len(), 4);
     }
 
     #[test]
     fn test_empty_chord() {
-        let res = parse_chord("", 4, 1.0);
+        let res = parse_chord("", 4, 1.0, Timbre::Default, 90);
         assert!(matches!(res, Err(Error::InvalidChord(_))));
     }
 
     #[test]
     fn test_sus_cannot_follow_minor() {
-        let res = parse_chord("Csus4m", 4, 1.0);
+        let res = parse_chord("Csus4m", 4, 1.0, Timbre::Default, 90);
         assert!(
             matches!(res, Err(Error::InvalidChord(msg)) if msg.contains("sus chord cannot be minor"))
         );
@@ -287,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_unknown_suffix() {
-        let res = parse_chord("Cxyz", 4, 1.0);
+        let res = parse_chord("Cxyz", 4, 1.0, Timbre::Default, 90);
         assert!(
             matches!(res, Err(Error::InvalidChord(msg)) if msg.contains("Unknown chord suffix"))
         );

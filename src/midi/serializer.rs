@@ -23,7 +23,7 @@ pub fn serialize(midi: Midi) -> Bytes {
      * Events:
      * delta_beat + notes_count + note_vec
      * Note_vec:
-     * note_frequency + note_duration
+     * note_frequency + note_duration + note_timbre + note_velocity
      */
     for event in &midi.events {
         let mut event_buffer = Bytes::new();
@@ -32,6 +32,8 @@ pub fn serialize(midi: Midi) -> Bytes {
         for note in &event.notes {
             event_buffer.extend(&note.0.get_freq().to_le_bytes());
             event_buffer.extend(&note.1.to_le_bytes());
+            event_buffer.extend(&(note.2 as i32).to_le_bytes());
+            event_buffer.extend(&note.3.to_le_bytes());
         }
         buf.extend(event_buffer);
     }
