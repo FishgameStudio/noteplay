@@ -100,6 +100,50 @@ pub fn semi2freq(semi: Semitones) -> Frequency {
     Frequency::new_unchecked(440.0 * (semi as f32 / 12.0).exp2())
 }
 
+/// Returns whether the note is valid.
+/// # Example
+/// ```
+/// # use noteplay::core::is_valid_note;
+/// # fn main() {
+/// assert!(is_valid_note("C4"));
+/// assert!(is_valid_note("G#4"));
+/// assert!(is_valid_note("Db5"));
+/// assert!(is_valid_note("E8"));
+/// assert!(!is_valid_note("L5"));
+/// assert!(!is_valid_note("K"));
+/// assert!(!is_valid_note("C"));
+/// assert!(!is_valid_note("abc"));
+/// # }
+/// ```
+pub fn is_valid_note(note: &str) -> bool {
+    let note = note.trim().to_ascii_uppercase();
+    let mut chars = note.chars().peekable();
+
+    // Base mute be C/D/E/F/G/A/B
+    let _base = match chars.next() {
+        Some(c @ ('C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B')) => c,
+        _ => return false,
+    };
+
+    // Diacritical marks #/b
+    if let Some(&ch) = chars.peek()
+        && (ch == '#' || ch == 'B')
+    {
+        chars.next();
+    }
+
+    // The rest must be numbers (octaves) and cannot be empty
+    let oct_str: String = chars.collect();
+    if oct_str.is_empty() {
+        return false;
+    }
+    if oct_str.parse::<i32>().is_err() {
+        return false;
+    }
+
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
