@@ -1,0 +1,295 @@
+//! Helpful utilities to construct your QMid file.
+
+use crate::Error;
+use crate::core::{Frequency, note2semi};
+use crate::midi::types::{Event, Note};
+
+/// Parse chords and generate a corresponding [`Event`] that stores the chord.
+///
+/// Supported marks: maj / m / dim / aug / sus2 / sus4 / maj7 / m7 / m7b5 / maj9 / m9 / add2 / add4 / add9
+///
+/// Extension sounds: 7,6,9,11,13; variation sounds: b5 #5 b9 #9 #11 b13
+///
+/// # Panics
+/// If used a 'm' after a 'sus'.
+///
+/// # Examples
+/// ```
+/// # use noteplay::midi::parse_chord;
+/// # fn main() {
+/// let c_maj = parse_chord("C", 4, 1.0).unwrap();
+/// assert_eq!(c_maj.notes.len(), 3);
+/// let cm7b5 = parse_chord("Cm7b5", 4, 1.0).unwrap();
+/// assert_eq!(cm7b5.notes.len(), 4);
+/// # }
+/// ```
+///
+/// ```should_panic
+/// # use noteplay::midi::parse_chord;
+/// # fn main() {
+/// // Cannot use a 'm' after a 'sus'
+/// let _ = parse_chord("Csus4m", 4, 1.0).unwrap(); // <--- PANICS
+/// # }
+/// ```
+pub fn parse_chord(chord: &str, root_octave: i32, dur_beat: f32) -> Result<Event, Error> {
+    if chord.is_empty() {
+        return Err(Error::InvalidChord("Chord is empty".into()));
+    }
+    let chord = chord.trim().to_ascii_uppercase();
+    let mut it = chord.chars().peekable();
+
+    // Base
+    let base = it
+        .next()
+        .ok_or_else(|| Error::InvalidChord("Unknown root".into()))?;
+    if !matches!(base, 'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B') {
+        return Err(Error::InvalidChord(format!("Unknown chord root: {base}")));
+    }
+
+    let mut acc = "";
+    let mut offset = 1;
+    if let Some(&c) = it.peek()
+        && (c == '#' || c == 'B')
+    {
+        acc = &chord[offset..offset + 1];
+        offset += 1;
+    }
+
+    let root_note = format!("{}{}{}", base, acc, root_octave);
+    let root_semi = note2semi(&root_note);
+    let mut suffix = &chord[offset..];
+
+    let mut tones = vec![0, 4, 7]; // Default major
+    let mut is_sus = false;
+
+    while !suffix.is_empty() {
+        if suffix.starts_with("MAJ7") {
+            tones.push(11);
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("MAJ9") {
+            tones.push(11);
+            tones.push(14);
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("M7b5") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot have m7b5".into()));
+            }
+            tones = vec![0, 3, 6, 10];
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("MADD9") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be madd9".into()));
+            }
+            tones = vec![0, 3, 7];
+            tones.push(14);
+            suffix = &suffix[5..];
+        } else if suffix.starts_with("SUS4") {
+            tones = vec![0, 5, 7];
+            is_sus = true;
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("SUS2") {
+            tones = vec![0, 2, 7];
+            is_sus = true;
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("ADD9") {
+            tones.push(14);
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("ADD4") {
+            tones.push(5);
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("ADD2") {
+            tones.push(2);
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("B13") {
+            tones.push(20);
+            suffix = &suffix[3..];
+        } else if suffix.starts_with("#11") {
+            tones.push(18);
+            suffix = &suffix[3..];
+        } else if suffix.starts_with("B5") {
+            if let Some(p) = tones.iter().position(|&x| x == 7) {
+                tones[p] = 6;
+            }
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("#5") {
+            if let Some(p) = tones.iter().position(|&x| x == 7) {
+                tones[p] = 8;
+            }
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("B9") {
+            tones.push(13);
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("#9") {
+            tones.push(15);
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("M7") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be m7".into()));
+            }
+            tones = vec![0, 3, 7, 10];
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("M9") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be m9".into()));
+            }
+            tones = vec![0, 3, 7, 10, 14];
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("MAJ") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot have maj".into()));
+            }
+            tones = vec![0, 4, 7];
+            suffix = &suffix[3..];
+        } else if suffix.starts_with("DIM7") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be dim7".into()));
+            }
+            tones = vec![0, 3, 6, 9];
+            suffix = &suffix[4..];
+        } else if suffix.starts_with("DIM") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be dim".into()));
+            }
+            tones = vec![0, 3, 6];
+            suffix = &suffix[3..];
+        } else if suffix.starts_with("AUG") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be aug".into()));
+            }
+            tones = vec![0, 4, 8];
+            suffix = &suffix[3..];
+        } else if suffix.starts_with("13") {
+            tones.push(21);
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("11") {
+            tones.push(17);
+            suffix = &suffix[2..];
+        } else if suffix.starts_with("7") {
+            tones.push(10);
+            suffix = &suffix[1..];
+        } else if suffix.starts_with("6") {
+            tones.push(9);
+            suffix = &suffix[1..];
+        } else if suffix.starts_with("9") {
+            tones.push(14);
+            suffix = &suffix[1..];
+        } else if suffix.starts_with("M") {
+            if is_sus {
+                return Err(Error::InvalidChord("sus chord cannot be minor".into()));
+            }
+            tones = vec![0, 3, 7];
+            suffix = &suffix[1..];
+        } else {
+            return Err(Error::InvalidChord(format!(
+                "Unknown chord suffix: {suffix}"
+            )));
+        }
+    }
+
+    let mut out: Vec<Note> = Vec::new();
+    for off in tones {
+        let t = (root_semi + off) as f32 / 12.0;
+        let f = 440.0 * t.exp2();
+        out.push((Frequency::new_unchecked(f), dur_beat));
+    }
+
+    Ok(Event::with_notes(out))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Error;
+
+    #[test]
+    fn test_parse_chord_basic() {
+        // C major
+        let ev = parse_chord("C", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 3);
+
+        // Cm minor
+        let ev = parse_chord("Cm", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 3);
+
+        // Csus4
+        let ev = parse_chord("Csus4", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 3);
+
+        // Csus2
+        let ev = parse_chord("Csus2", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 3);
+
+        // Cmaj7
+        let ev = parse_chord("Cmaj7", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+
+        // Cm7b5
+        let ev = parse_chord("Cm7b5", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+
+        // C7
+        let ev = parse_chord("C7", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+
+        // Cadd9
+        let ev = parse_chord("Cadd9", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+
+        // Cdim
+        let ev = parse_chord("Cdim", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 3);
+
+        // Caug
+        let ev = parse_chord("Caug", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 3);
+
+        // C#maj7 sharp root
+        let ev = parse_chord("C#maj7", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+
+        // CBmaj7 flat root
+        let ev = parse_chord("CBmaj7", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+    }
+
+    #[test]
+    fn test_parse_chord_extended() {
+        // Cmaj9
+        let ev = parse_chord("Cmaj9", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 5);
+
+        // C7b9
+        let ev = parse_chord("C7b9", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 5);
+
+        // C7#9
+        let ev = parse_chord("C7#9", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 5);
+
+        // C13
+        let ev = parse_chord("C13", 4, 1.0).unwrap();
+        assert_eq!(ev.notes.len(), 4);
+    }
+
+    #[test]
+    fn test_empty_chord() {
+        let res = parse_chord("", 4, 1.0);
+        assert!(matches!(res, Err(Error::InvalidChord(_))));
+    }
+
+    #[test]
+    fn test_sus_cannot_follow_minor() {
+        let res = parse_chord("Csus4m", 4, 1.0);
+        assert!(
+            matches!(res, Err(Error::InvalidChord(msg)) if msg.contains("sus chord cannot be minor"))
+        );
+    }
+
+    #[test]
+    fn test_unknown_suffix() {
+        let res = parse_chord("Cxyz", 4, 1.0);
+        assert!(
+            matches!(res, Err(Error::InvalidChord(msg)) if msg.contains("Unknown chord suffix"))
+        );
+    }
+}

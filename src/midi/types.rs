@@ -14,10 +14,10 @@ pub type Note = (Frequency, f32);
 #[derive(Debug, Clone, Copy)]
 pub struct RawNote(pub Semitones, pub f32);
 
-/// A storage of an event in a tempo.
+/// A storage of an event in a beat.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Event {
-    /// Notes to press in a tempo.
+    /// Notes to press in a beat.
     pub notes: Vec<Note>,
     /// How many beats have passed since the previous event.
     pub delta_beat: f32,

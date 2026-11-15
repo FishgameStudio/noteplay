@@ -1,8 +1,6 @@
 //! Parser for the musical note.
 
-use crate::core::types::Semitones;
-
-use super::Frequency;
+use crate::core::types::{Frequency, Semitones};
 
 /// Parse note and give a frequency.
 /// # Panics

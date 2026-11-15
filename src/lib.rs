@@ -78,4 +78,13 @@ pub enum Error {
     /// Failed to open device default sink.
     #[error("Failed to open device default sink: {0}")]
     OpenDefaultSink(#[from] rodio::DeviceSinkError),
+    /// Bad root octave.
+    #[error("Bad root octave: {0}")]
+    BadRootOctave(i32),
+    /// Invalid chord format.
+    #[error("Invalid chord format: {0}")]
+    InvalidChord(String),
+    /// Unknown chord suffix.
+    #[error("Unknown chord suffix: {0}")]
+    UnknownChordSuffix(String),
 }
