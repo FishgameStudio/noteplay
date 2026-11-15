@@ -9,7 +9,8 @@ repository = "https://github.com/FishgameStudio/noteplay"
 [features]
 default = []
 songs = []
-full = ["songs"]
+sf2 = []
+full = ["songs", "sf2"]
 
 [lib]
 name = "noteplay"
