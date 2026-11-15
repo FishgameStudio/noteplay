@@ -59,6 +59,18 @@ impl MidiPlayer {
             remaining_playback_beats(&midi.events) * sec_per_beat,
         ));
     }
+    /// Loop play a Midi struct synchronously.
+    /// Block current thread until finish.
+    /// Notes are played for 95% of their specified duration to add a short articulation gap
+    /// without shifting event start times.
+    ///
+    /// # Panics
+    /// If the Midi is invalid.
+    pub fn loop_play(midi: &Midi, np: &NotePlayer) -> ! {
+        loop {
+            Self::play(midi, np);
+        }
+    }
 }
 
 #[cfg(test)]
