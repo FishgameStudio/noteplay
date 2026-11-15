@@ -31,10 +31,13 @@
 #[cfg(doctest)]
 pub struct ReadmeDoctests;
 
-pub mod core;
-pub mod midi;
+#[cfg(feature = "sf2")]
+pub mod builtin_sf2;
 #[cfg(feature = "songs")]
 pub mod songs;
+
+pub mod core;
+pub mod midi;
 
 /// Top-level error type for this crate.
 ///
