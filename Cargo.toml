@@ -16,7 +16,7 @@ name = "noteplay"
 path = "src/lib.rs"
 doc = true
 
-[[bin]]
+[[example]]
 name = "test"
 path = "src/test.rs"
 
