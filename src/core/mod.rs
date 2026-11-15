@@ -1,4 +1,4 @@
-//! The core playback module.
+#![doc = include_str!("./README.md")]
 
 pub(crate) mod note_parser;
 pub(crate) mod note_player;

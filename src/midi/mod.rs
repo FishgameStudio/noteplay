@@ -1,4 +1,4 @@
-//! A simple parser for custom MIDI files.
+#![doc = include_str!("./README.md")]
 
 pub(crate) mod deserializer;
 pub(crate) mod macros;

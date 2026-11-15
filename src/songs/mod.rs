@@ -1,4 +1,4 @@
-//! Common midi song collections.
+#![doc = include_str!("./README.md")]
 
 use crate::midi::{MidiRaw, event_const as e, midi_const as m};
 
