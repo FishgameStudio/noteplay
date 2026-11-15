@@ -15,6 +15,7 @@
 #![warn(clippy::todo)]
 #![warn(clippy::unimplemented)]
 #![warn(clippy::semicolon_if_nothing_returned)]
+#![allow(clippy::redundant_pub_crate)]
 
 //! # Noteplay: Note & Midi Player for Rust
 //! **Noteplay** is a Rust crate for turning
@@ -91,4 +92,27 @@ pub enum Error {
     /// Unknown chord suffix.
     #[error("Unknown chord suffix: {0}")]
     UnknownChordSuffix(String),
+    /// Failed to create a synthesizer.
+    #[error("Failed to create a synthesizer: {0}")]
+    SynthesizerCreation(#[from] rustysynth::SynthesizerError),
+    /// Failed to create a new sound font.
+    #[error("Failed to create a new sound font: {0}")]
+    SoundFontCreation(#[from] rustysynth::SoundFontError),
+    /// Try to apply default timbre while soundfont processing.
+    #[error("Try to apply default timbre while soundfont processing")]
+    TryToApplyDefaultTimbre,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_try_to_apply_default_timbre_display() {
+        let e = Error::TryToApplyDefaultTimbre;
+        assert_eq!(
+            e.to_string(),
+            "Try to apply default timbre while soundfont processing"
+        );
+    }
 }

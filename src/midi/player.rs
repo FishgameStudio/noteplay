@@ -51,7 +51,7 @@ impl MidiPlayer {
             for (freq, dur_beat) in &event.notes {
                 let dur_sec =
                     Duration::from_secs_f32(articulated_duration_beats(*dur_beat) * sec_per_beat);
-                np.play_freq_async(*freq, dur_sec);
+                np.play_freq_async(*freq, dur_sec, 90); // Temporary 90
             }
         }
 
