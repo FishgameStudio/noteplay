@@ -13,7 +13,7 @@ This project follows Rust community conventions. The rules below supplement `rus
 - Prefer safe Rust. `unsafe` must have a `// SAFETY:` comment explaining why it is sound.
 - Keep functions small and focused. Avoid giant functions.
 - Name things clearly; avoid abbreviations unless they are widely understood (e.g. `id`, `ctx`).
-- If you created a new folder, please add a `README.md` file in it.
+- If you created a new folder, please add a `README.md` file in it and describe this folder in the `README.md`.
 - Add unit tests for new APIs if possible.
 
 ### Error Handling
