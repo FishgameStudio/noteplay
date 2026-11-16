@@ -35,7 +35,7 @@ impl MidiPlayer {
     /// without shifting event start times.
     ///
     /// # Panics
-    /// If the Midi is invalid or the [`NotePlayer`] didn't be initialized soundfont.
+    /// If the [`Midi`] is invalid or the [`NotePlayer`] didn't be initialized soundfont.
     pub fn play(midi: &Midi, np: &mut NotePlayer) {
         // Validate
         assert!(midi.tempo.get_tempo() > 20.0, "Tempo too low");
@@ -53,6 +53,11 @@ impl MidiPlayer {
                 let dur_sec =
                     Duration::from_secs_f32(articulated_duration_beats(*dur_beat) * sec_per_beat);
                 np.set_timbre(*timbre);
+                assert!(
+                    0 <= *velocity && *velocity <= 127,
+                    "'{}' is not a valid velocity",
+                    *velocity
+                );
                 np.play_freq_async(*freq, dur_sec, *velocity); // Temporary 90
             }
         }
