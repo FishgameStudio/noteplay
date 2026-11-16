@@ -25,6 +25,9 @@ impl Frequency {
     /// ## ⚠️ Caution
     /// You must call this function when you really ensure that `freq` is
     /// **finite and greater than 0**.
+    ///
+    /// # Panics
+    /// If the freq is invalid.
     pub fn new_unchecked(freq: f32) -> Self {
         assert!(freq.is_finite() && freq >= 0.0);
         Self { freq }
@@ -73,6 +76,9 @@ impl Tempo {
     /// ## ⚠️ Caution
     /// You must call this function when you really ensure that `tempo` is
     /// **finite and greater than 0**.
+    ///
+    /// # Panics
+    /// If the freq is invalid.
     pub fn new_unchecked(tempo: f32) -> Self {
         assert!(tempo.is_finite() && tempo >= 0.0);
         Self { tempo }
