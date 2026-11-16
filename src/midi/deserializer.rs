@@ -1,4 +1,4 @@
-//! Binary deserailizer.
+//! Binary deserializer.
 
 use crate::Error;
 use crate::core::Frequency;
@@ -10,6 +10,7 @@ use crate::soundfont::Timbre;
 use std::io::{Cursor, Read};
 
 /// Deserialize binary which serialized with function [`serialize()`](crate::midi::serialize).
+///
 /// # Errors
 /// If the format is invalid.
 pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
@@ -76,13 +77,13 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
             r.read_exact(&mut velocity_buf)?;
             let velocity = i32::from_le_bytes(velocity_buf);
 
-            notes.push((Frequency::new_unchecked(freq), dur, timbre, velocity));
+            notes.push((Frequency::new(freq)?, dur, timbre, velocity));
         }
         events.push(Event { notes, delta_beat });
     }
 
     Ok(Midi {
-        tempo: Tempo::new_unchecked(tempo),
+        tempo: Tempo::new(tempo)?,
         events,
     })
 }
