@@ -240,7 +240,6 @@ pub const SONG_NAME_LEN: usize = 48;
 pub const HEADER_LEN: usize = 718;
 
 /// Default metadata for this crate.
-#[cfg(feature = "songs")]
 pub const DEFAULT_META: MidiMeta = MidiMeta {
     song_name: None,
     copyright: Some(FixedString::<COPYRIGHT_LEN>::from_str_const(
