@@ -1,5 +1,3 @@
-// This binary only for tests, not for install.
-
 use noteplay::builtin_sf2::TIMGM6MB;
 use noteplay::core::NotePlayer;
 use noteplay::midi::*;
