@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn empty_midi_round_trips() {
         let expected = Midi::new();
-        let actual = deserialize(serialize(Midi::new())).unwrap();
+        let actual = deserialize(serialize(&Midi::new())).unwrap();
 
         assert_midi_eq(&expected, &actual);
     }
@@ -78,7 +78,7 @@ mod tests {
             ],
         };
 
-        let bin = serialize(midi);
+        let bin = serialize(&midi);
         let mut expected_bin = Vec::new();
         expected_bin.extend_from_slice(MAGIC);
         expected_bin.extend_from_slice(&VERSION.to_le_bytes());
