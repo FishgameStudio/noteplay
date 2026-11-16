@@ -18,8 +18,8 @@ path = "src/lib.rs"
 doc = true
 
 [[example]]
-name = "test"
-path = "src/test.rs"
+name = "play_music"
+path = "examples/play_music.rs"
 
 [dependencies]
 num_enum = "0.7.6"
