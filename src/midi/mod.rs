@@ -15,7 +15,7 @@ pub use player::MidiPlayer;
 pub use serializer::serialize;
 pub use types::{
     AUTHOR_LEN, COPYRIGHT_LEN, DEFAULT_META, Event, EventRaw, MAGIC, Midi, MidiMeta, MidiRaw, Note,
-    SONG_NAME_LEN, VERSION,
+    RawNote, SONG_NAME_LEN, VERSION,
 };
 pub use utils::*;
 
