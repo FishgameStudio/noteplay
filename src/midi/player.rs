@@ -39,7 +39,7 @@ impl MidiPlayer {
     pub fn play(midi: &Midi, np: &mut NotePlayer) {
         // Validate
         assert!(midi.tempo.get_tempo() > 20.0, "Tempo too low");
-        assert!(np.synth.is_some() && np.synth_settings.is_some());
+        assert!(np.synth.is_ready());
 
         let sec_per_beat = 60.0 / midi.tempo.get_tempo();
 

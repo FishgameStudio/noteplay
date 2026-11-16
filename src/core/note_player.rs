@@ -2,14 +2,14 @@ use crate::Error;
 use crate::core::note_parser::note2freq;
 use crate::core::types::Frequency;
 use crate::soundfont::loader::make_synth;
-use crate::soundfont::types::{SynthSource, Timbre, freq_to_midi};
+use crate::soundfont::types::{SynthHandle, Timbre, freq_to_midi};
 use rodio::mixer::Mixer;
 use rodio::source::{SineWave, Source};
 use rodio::{DeviceSinkBuilder, MixerDeviceSink};
 use rustysynth::SoundFont;
-use rustysynth::{Synthesizer, SynthesizerSettings};
+use rustysynth::SynthesizerSettings;
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Addition for a [`Duration`] and a [`f32`].
@@ -25,8 +25,7 @@ pub struct NotePlayer {
     mixer: Mixer,
     timbre: Timbre,
     sf: Option<Arc<SoundFont>>,
-    pub(crate) synth: Option<Arc<Mutex<Synthesizer>>>,
-    pub(crate) synth_settings: Option<SynthesizerSettings>,
+    pub(crate) synth: SynthHandle,
 }
 
 impl std::fmt::Debug for NotePlayer {
@@ -43,13 +42,15 @@ impl NotePlayer {
         let mut handle = DeviceSinkBuilder::open_default_sink()?;
         handle.log_on_drop(false);
         let mixer = handle.mixer().clone();
+        let synth_settings = SynthesizerSettings::new(44100);
+        let synth = SynthHandle::new(&synth_settings);
+        mixer.add(synth.source());
         Ok(Self {
             _handle: handle,
             mixer,
             timbre: Timbre::Default,
             sf: None,
-            synth: None,
-            synth_settings: None,
+            synth,
         })
     }
 
@@ -59,16 +60,8 @@ impl NotePlayer {
     }
 
     /// Set the timbre.
-    pub fn set_timbre(&mut self, timbre: Timbre) {
+    pub const fn set_timbre(&mut self, timbre: Timbre) {
         self.timbre = timbre;
-        if let Some(synth_arc) = &self.synth
-            && let Some(prog) = timbre.to_program()
-        {
-            synth_arc
-                .lock()
-                .unwrap()
-                .process_midi_message(0, 0xC0, prog as i32, 0);
-        }
     }
 
     /// Set the soundfont from bytes from a **sf2** file.
@@ -77,11 +70,9 @@ impl NotePlayer {
     pub fn set_soundfont_from_bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
         use crate::soundfont::loader::load_soundfont_from_bytes;
         let sf = Arc::new(load_soundfont_from_bytes(bytes)?);
-        self.sf = Some(sf.clone());
-
         let t = make_synth(&sf, self.timbre)?;
-        self.synth = Some(Arc::new(Mutex::new(t.0)));
-        self.synth_settings = Some(t.1);
+        self.synth.install(t.0);
+        self.sf = Some(sf);
         Ok(())
     }
 
@@ -122,14 +113,12 @@ impl NotePlayer {
             return;
         }
 
-        let synth = self
-            .synth
-            .as_ref()
-            .expect("Timbre is not Default, but no soundfont loaded. Call set_soundfont first.");
-        let settings = self.synth_settings.as_ref().unwrap();
         let midi = freq_to_midi(freq.get_freq());
-        let src = SynthSource::new(synth.clone(), settings, midi, velocity, sec);
-        self.mixer.add(src);
+        assert!(
+            self.synth.is_ready(),
+            "Timbre is not Default, but no soundfont loaded. Call set_soundfont first."
+        );
+        self.synth.queue_note(midi, velocity, self.timbre, sec);
     }
 
     /// Synchronously play a note of a specified frequency.

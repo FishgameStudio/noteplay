@@ -3,7 +3,9 @@
 use num_enum::TryFromPrimitive;
 use rodio::Source;
 use rustysynth::{Synthesizer, SynthesizerSettings};
+use std::collections::VecDeque;
 use std::num::NonZero;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// Enumeration of musical instruments.
@@ -176,66 +178,183 @@ pub(crate) fn freq_to_midi(freq: f32) -> i32 {
     midi.clamp(0.0, 127.0).round() as i32
 }
 
-use std::sync::{Arc, Mutex};
-
-/// Wrapper: wraps the rustysynth Synthesizer into a rodio Source
-/// Stereo f32 audio stream
-pub(crate) struct SynthSource {
-    synth: Arc<Mutex<Synthesizer>>,
-    sample_rate: NonZero<u32>,
-    remaining_samples: u64,
-    buffer: Vec<f32>,
-    pos: usize,
+struct NoteEvent {
     midi_note: i32,
-    channel: i32,
+    velocity: i32,
+    program: u32,
+    duration_samples: u64,
 }
 
-impl SynthSource {
-    pub(crate) fn new(
-        synth: Arc<Mutex<Synthesizer>>,
-        settings: &SynthesizerSettings,
-        midi_note: i32,
-        velocity: i32,
-        sec: Duration,
-    ) -> Self {
-        const CHANNEL: i32 = 0;
-        synth.lock().unwrap().note_on(CHANNEL, midi_note, velocity);
+struct SynthEngine {
+    synth: Option<Synthesizer>,
+    pending_notes: VecDeque<NoteEvent>,
+    generation: u64,
+}
 
-        let sample_rate = NonZero::new(settings.sample_rate as u32).unwrap();
-        let total_samples = (sec.as_secs_f32() * sample_rate.get() as f32) as u64;
-        let buffer = Vec::with_capacity(1024 * 2);
+#[derive(Clone)]
+pub(crate) struct SynthHandle {
+    engine: Arc<Mutex<SynthEngine>>,
+    sample_rate: NonZero<u32>,
+}
+
+impl SynthHandle {
+    pub(crate) fn new(settings: &SynthesizerSettings) -> Self {
         Self {
-            synth,
-            sample_rate,
-            remaining_samples: total_samples,
-            buffer,
-            pos: 0,
-            midi_note,
-            channel: CHANNEL,
+            engine: Arc::new(Mutex::new(SynthEngine {
+                synth: None,
+                pending_notes: VecDeque::new(),
+                generation: 0,
+            })),
+            sample_rate: NonZero::new(settings.sample_rate as u32).unwrap(),
         }
     }
 
+    pub(crate) fn install(&self, synth: Synthesizer) {
+        let mut engine = self.engine.lock().unwrap();
+        engine.pending_notes.clear();
+        engine.synth = Some(synth);
+        engine.generation = engine.generation.wrapping_add(1);
+    }
+
+    pub(crate) fn is_ready(&self) -> bool {
+        self.engine.lock().unwrap().synth.is_some()
+    }
+
+    pub(crate) fn queue_note(
+        &self,
+        midi_note: i32,
+        velocity: i32,
+        timbre: Timbre,
+        duration: Duration,
+    ) {
+        let program = timbre
+            .to_program()
+            .expect("SoundFont playback requires a non-default timbre");
+        let duration_samples = (duration.as_secs_f64() * f64::from(self.sample_rate.get()))
+            .min(u64::MAX as f64) as u64;
+        self.engine
+            .lock()
+            .unwrap()
+            .pending_notes
+            .push_back(NoteEvent {
+                midi_note,
+                velocity,
+                program,
+                duration_samples,
+            });
+    }
+
+    pub(crate) fn source(&self) -> SynthSource {
+        SynthSource {
+            engine: self.engine.clone(),
+            sample_rate: self.sample_rate,
+            generation: 0,
+            active_notes: Vec::new(),
+            buffer: Vec::with_capacity(256 * 2),
+            left: vec![0.0; 256],
+            right: vec![0.0; 256],
+            pos: 0,
+        }
+    }
+}
+
+struct ActiveNote {
+    channel: i32,
+    midi_note: i32,
+    remaining_samples: u64,
+}
+
+/// A single rodio source that advances the SoundFont synthesizer's shared timeline.
+pub(crate) struct SynthSource {
+    engine: Arc<Mutex<SynthEngine>>,
+    sample_rate: NonZero<u32>,
+    generation: u64,
+    active_notes: Vec<ActiveNote>,
+    buffer: Vec<f32>,
+    left: Vec<f32>,
+    right: Vec<f32>,
+    pos: usize,
+}
+
+impl SynthSource {
+    #[allow(clippy::significant_drop_tightening)]
+    // SAFETY: synth borrows from engine guard;
+    // cannot drop engine early even if engine name
+    // is no longer used
     pub(crate) fn refill_buffer(&mut self) {
+        const CHANNEL: i32 = 0;
+        const RENDER_FRAMES: usize = 256;
+
         self.buffer.clear();
         self.pos = 0;
-        if self.remaining_samples == 0 {
-            return;
+
+        self.left.fill(0.0);
+        self.right.fill(0.0);
+        let mut engine = self.engine.lock().unwrap();
+        if self.generation != engine.generation {
+            self.active_notes.clear();
+            self.generation = engine.generation;
         }
-        let render = 1024u64.min(self.remaining_samples);
-        let mut left = vec![0f32; render as usize];
-        let mut right = vec![0f32; render as usize];
-        self.synth.lock().unwrap().render(&mut left, &mut right);
-        for (l, r) in left.into_iter().zip(right) {
+        let pending_notes = engine.pending_notes.drain(..).collect::<Vec<_>>();
+        let Some(synth) = engine.synth.as_mut() else {
+            self.buffer.resize(RENDER_FRAMES * 2, 0.0);
+            return;
+        };
+
+        for event in pending_notes {
+            let channel = (0..16)
+                .find(|channel| {
+                    !self
+                        .active_notes
+                        .iter()
+                        .any(|note| note.channel == *channel && note.midi_note == event.midi_note)
+                })
+                .unwrap_or(CHANNEL);
+            synth.process_midi_message(channel, 0xC0, event.program as i32, 0);
+            synth.note_on(channel, event.midi_note, event.velocity);
+            if event.duration_samples == 0 {
+                synth.note_off(channel, event.midi_note);
+            } else {
+                self.active_notes.push(ActiveNote {
+                    channel,
+                    midi_note: event.midi_note,
+                    remaining_samples: event.duration_samples,
+                });
+            }
+        }
+
+        let mut rendered = 0;
+        while rendered < RENDER_FRAMES {
+            let mut active = 0;
+            while active < self.active_notes.len() {
+                if self.active_notes[active].remaining_samples == 0 {
+                    let note = self.active_notes.swap_remove(active);
+                    synth.note_off(note.channel, note.midi_note);
+                } else {
+                    active += 1;
+                }
+            }
+
+            let frames = self
+                .active_notes
+                .iter()
+                .map(|note| note.remaining_samples)
+                .min()
+                .unwrap_or((RENDER_FRAMES - rendered) as u64)
+                .min((RENDER_FRAMES - rendered) as u64) as usize;
+            synth.render(
+                &mut self.left[rendered..rendered + frames],
+                &mut self.right[rendered..rendered + frames],
+            );
+            for note in &mut self.active_notes {
+                note.remaining_samples -= frames as u64;
+            }
+            rendered += frames;
+        }
+
+        for (&l, &r) in self.left.iter().zip(&self.right) {
             self.buffer.push(l);
             self.buffer.push(r);
-        }
-        self.remaining_samples -= render;
-
-        if self.remaining_samples == 0 {
-            self.synth
-                .lock()
-                .unwrap()
-                .note_off(self.channel, self.midi_note);
         }
     }
 }
@@ -244,13 +363,7 @@ impl Iterator for SynthSource {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
         if self.pos >= self.buffer.len() {
-            if self.remaining_samples == 0 {
-                return None;
-            }
             self.refill_buffer();
-            if self.buffer.is_empty() {
-                return None;
-            }
         }
         let v = self.buffer[self.pos];
         self.pos += 1;
@@ -308,5 +421,68 @@ mod tests {
         // A4 ±一点，四舍五入到69
         assert_eq!(freq_to_midi(438.0), 69);
         assert_eq!(freq_to_midi(442.0), 69);
+    }
+
+    #[test]
+    fn queued_notes_advance_and_release_on_the_sample_timeline() {
+        let soundfont = crate::soundfont::loader::load_soundfont_from_bytes(include_bytes!(
+            "../../assets/TimGM6mb.sf2"
+        ))
+        .unwrap();
+        let soundfont = Arc::new(soundfont);
+        let (synth, settings) =
+            crate::soundfont::loader::make_synth(&soundfont, Timbre::AcousticGrandPiano).unwrap();
+        let handle = SynthHandle::new(&settings);
+        handle.install(synth);
+        handle.queue_note(
+            69,
+            100,
+            Timbre::AcousticGrandPiano,
+            Duration::from_millis(500),
+        );
+
+        let mut source = handle.source();
+        source.refill_buffer();
+
+        assert_eq!(source.active_notes.len(), 1);
+        assert_eq!(
+            source.active_notes[0].remaining_samples,
+            500 * 44_100 / 1000 - 256
+        );
+        assert_eq!(source.buffer.len(), 256 * 2);
+
+        handle.queue_note(
+            69,
+            100,
+            Timbre::AcousticGrandPiano,
+            Duration::from_millis(500),
+        );
+        source.refill_buffer();
+
+        assert_eq!(source.active_notes.len(), 2);
+        assert_eq!(source.active_notes[0].channel, 0);
+        assert_eq!(source.active_notes[1].channel, 1);
+        assert_eq!(
+            source.active_notes[0].remaining_samples,
+            500 * 44_100 / 1000 - 512
+        );
+
+        handle.queue_note(
+            69,
+            100,
+            Timbre::AcousticGrandPiano,
+            Duration::from_millis(2),
+        );
+        source.refill_buffer();
+
+        assert_eq!(source.active_notes.len(), 2);
+        assert_eq!(
+            source.active_notes[0].remaining_samples,
+            500 * 44_100 / 1000 - 768
+        );
+        assert_eq!(
+            source.active_notes[1].remaining_samples,
+            500 * 44_100 / 1000 - 512
+        );
     }
 }
