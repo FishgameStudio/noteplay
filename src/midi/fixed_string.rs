@@ -1,5 +1,6 @@
 //! Type definition of [`FixedString`].
 
+/// Enumeration of errors about the [`FixedString`].
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum FixedStringParseError {

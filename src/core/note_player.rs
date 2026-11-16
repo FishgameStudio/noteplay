@@ -89,6 +89,13 @@ impl NotePlayer {
         Ok(())
     }
 
+    pub(crate) fn set_sf(&mut self, sf: SoundFont) -> Result<(), Error> {
+        let sf = Arc::new(sf);
+        self.synth.install(make_synth(&sf, self.timbre)?.0);
+        self.sf = Some(sf);
+        Ok(())
+    }
+
     /// **Asynchronously** play a note of a specified frequency.
     /// # Panics
     /// - If the frequency is not greater than 0.

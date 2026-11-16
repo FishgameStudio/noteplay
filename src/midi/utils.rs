@@ -205,6 +205,29 @@ pub fn parse_chord(
     Ok(Event::with_notes(out))
 }
 
+/// Play .qmid files.
+pub fn play_qmid_file<P>(path: P, sf2_bytes: Vec<u8>) -> Result<(), Error>
+where
+    P: AsRef<std::path::Path>,
+{
+    let bytes: Vec<u8> = std::fs::read(path)?;
+    let sf = crate::soundfont::loader::load_soundfont_from_bytes(&sf2_bytes)?;
+    let midi = crate::midi::deserializer::deserialize(bytes)?;
+    let mut np = crate::core::note_player::NotePlayer::new()?;
+    np.set_sf(sf)?;
+    crate::midi::player::MidiPlayer::play(&midi, &mut np);
+    Ok(())
+}
+/// Get metadata from .qmid files.
+pub fn get_metadata<P>(path: P) -> Result<crate::midi::MidiMeta, Error>
+where
+    P: AsRef<std::path::Path>,
+{
+    let bytes: Vec<u8> = std::fs::read(path)?;
+    let midi = crate::midi::deserializer::deserialize(bytes)?;
+    Ok(midi.meta)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -39,6 +39,7 @@ pub mod songs;
 
 pub mod core;
 pub mod midi;
+pub mod prelude;
 pub mod soundfont;
 
 /// Top-level error type for this crate.

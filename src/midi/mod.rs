@@ -9,7 +9,7 @@ pub(crate) mod types;
 pub(crate) mod utils;
 
 pub use deserializer::deserialize;
-pub use fixed_string::FixedString;
+pub use fixed_string::{FixedString, FixedStringParseError};
 pub use macros::{event, event_const, midi, midi_const, repeat};
 pub use player::MidiPlayer;
 pub use serializer::serialize;
