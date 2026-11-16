@@ -26,7 +26,7 @@ mod tests {
 
     use super::deserializer::deserialize;
     use super::serializer::serialize;
-    use super::types::{Event, MAGIC, Midi, VERSION};
+    use super::types::{Event, MAGIC, Midi, MidiMeta, VERSION};
 
     fn assert_midi_eq(expected: &Midi, actual: &Midi) {
         assert_eq!(
@@ -59,11 +59,15 @@ mod tests {
         assert_midi_eq(&expected, &actual);
     }
 
-    //#[test]
-    // TODO: Update This
-    fn _midi_with_mixed_events_round_trips_and_has_expected_binary_layout() {
+    #[test]
+    fn midi_with_mixed_events_round_trips_and_has_expected_binary_layout() {
         let midi = Midi {
             tempo: Tempo::new_unchecked(123.5),
+            meta: MidiMeta {
+                song_name: None,
+                copyright: None,
+                author: None,
+            },
             events: vec![
                 Event {
                     notes: vec![],
@@ -81,30 +85,49 @@ mod tests {
                     delta_beat: 2.0,
                 },
             ],
-            ..Midi::default()
         };
 
         let bin = serialize(&midi);
         let mut expected_bin = Vec::new();
+
+        // Header
         expected_bin.extend_from_slice(MAGIC);
         expected_bin.extend_from_slice(&VERSION.to_le_bytes());
         expected_bin.extend_from_slice(&123.5_f32.to_le_bytes());
         expected_bin.extend_from_slice(&3_u32.to_le_bytes());
 
+        // FixedString<48> song_name, FixedString<96> copyright, FixedString<32> author, all zero
+        expected_bin.extend_from_slice(&[0u8; 48 * 4]);
+        expected_bin.extend_from_slice(&[0u8; 96 * 4]);
+        expected_bin.extend_from_slice(&[0u8; 32 * 4]);
+
+        // Event 0
         expected_bin.extend_from_slice(&0.0_f32.to_le_bytes());
         expected_bin.extend_from_slice(&0_u32.to_le_bytes());
 
+        // Event 1
         expected_bin.extend_from_slice(&0.5_f32.to_le_bytes());
         expected_bin.extend_from_slice(&2_u32.to_le_bytes());
+        // Note 1: freq(f32), dur(f32), timbre(i32), velocity(i32)
         expected_bin.extend_from_slice(&440.0_f32.to_le_bytes());
         expected_bin.extend_from_slice(&0.25_f32.to_le_bytes());
+        expected_bin.extend_from_slice(&(Timbre::Default as i32).to_le_bytes());
+        expected_bin.extend_from_slice(&90i32.to_le_bytes());
+
+        // Note 2
         expected_bin.extend_from_slice(&261.625_f32.to_le_bytes());
         expected_bin.extend_from_slice(&1.5_f32.to_le_bytes());
+        expected_bin.extend_from_slice(&(Timbre::Default as i32).to_le_bytes());
+        expected_bin.extend_from_slice(&90i32.to_le_bytes());
 
+        // Event 2
         expected_bin.extend_from_slice(&2.0_f32.to_le_bytes());
         expected_bin.extend_from_slice(&1_u32.to_le_bytes());
+        // Note
         expected_bin.extend_from_slice(&880.0_f32.to_le_bytes());
         expected_bin.extend_from_slice(&0.125_f32.to_le_bytes());
+        expected_bin.extend_from_slice(&(Timbre::Default as i32).to_le_bytes());
+        expected_bin.extend_from_slice(&90i32.to_le_bytes());
 
         assert_eq!(bin, expected_bin);
 
@@ -112,6 +135,11 @@ mod tests {
         assert_midi_eq(
             &Midi {
                 tempo: Tempo::new_unchecked(123.5),
+                meta: MidiMeta {
+                    song_name: None,
+                    copyright: None,
+                    author: None,
+                },
                 events: vec![
                     Event {
                         notes: vec![],
@@ -129,7 +157,6 @@ mod tests {
                         delta_beat: 2.0,
                     },
                 ],
-                ..Midi::default()
             },
             &actual,
         );
