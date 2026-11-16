@@ -101,8 +101,8 @@ macro_rules! midi {
             ),*],
             meta: $crate::midi::MidiMeta {
                 song_name: Some($crate::midi::FixedString::<{$crate::midi::SONG_NAME_LEN}>::from_str_const($song_name)),
-                author: Some($crate::midi::FixedString::<{$crate::midi::AUTHOR_LEN}>::from_str_const($author))
-                copyright: Some($crate::midi::FixedString::<{$crate::midi::COPYRIGHT_LEN}>::from_str_const($copyright))
+                author: Some($crate::midi::FixedString::<{$crate::midi::AUTHOR_LEN}>::from_str_const($author)),
+                copyright: Some($crate::midi::FixedString::<{$crate::midi::COPYRIGHT_LEN}>::from_str_const($copyright)),
             }
         }
     }
@@ -121,7 +121,7 @@ macro_rules! event_const {
         $crate::midi::EventRaw {
             delta_beat: $delta,
             notes: &[$(
-                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::BrightAcousticPiano, 100)
+                $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::BrightAcousticPiano, 100)
             ),*],
         }
     }};
@@ -132,7 +132,7 @@ macro_rules! event_const {
         $crate::midi::EventRaw {
             delta_beat: $delta,
             notes: &[$(
-                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, 100)
+                $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, 100)
             ),*],
         }
     }};
@@ -143,7 +143,7 @@ macro_rules! event_const {
         $crate::midi::EventRaw {
             delta_beat: $delta,
             notes: &[$(
-                $crate::midi::types::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, $velocity)
+                $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, $velocity)
             ),*],
         }
     }};
@@ -179,8 +179,8 @@ macro_rules! midi_const {
             ),*],
             meta: $crate::midi::MidiMeta {
                 song_name: Some($crate::midi::FixedString::<{$crate::midi::SONG_NAME_LEN}>::from_str_const($song_name)),
-                author: Some($crate::midi::FixedString::<{$crate::midi::AUTHOR_LEN}>::from_str_const($author))
-                copyright: Some($crate::midi::FixedString::<{$crate::midi::COPYRIGHT_LEN}>::from_str_const($copyright))
+                author: Some($crate::midi::FixedString::<{$crate::midi::AUTHOR_LEN}>::from_str_const($author)),
+                copyright: Some($crate::midi::FixedString::<{$crate::midi::COPYRIGHT_LEN}>::from_str_const($copyright)),
             }
         }
     }};
