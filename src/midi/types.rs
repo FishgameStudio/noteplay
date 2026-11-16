@@ -1,11 +1,9 @@
 //! Main definition of the structure.
 
+use crate::midi::fixed_string::FixedString;
 use crate::{
-    core::{
-        Frequency,
-        types::{Semitones, Tempo},
-    },
-    soundfont::Timbre,
+    core::types::{Frequency, Semitones, Tempo},
+    soundfont::types::Timbre,
 };
 
 /// Runtime note: (frequency Hz, duration beat, Timbre, velocity).
@@ -53,13 +51,41 @@ impl Default for Event {
     }
 }
 
-/// A custom Midi format.
+/// Metadata of a [`Midi`] or [`MidiRaw`] structure.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct MidiMeta {
+    /// Name of the song.
+    pub song_name: Option<FixedString<SONG_NAME_LEN>>,
+    /// Copyright
+    pub copyright: Option<FixedString<COPYRIGHT_LEN>>,
+    /// Author
+    pub author: Option<FixedString<AUTHOR_LEN>>,
+}
+impl MidiMeta {
+    /// Create a new [`MidiMeta`] object.
+    pub const fn new() -> Self {
+        Self {
+            song_name: None,
+            copyright: None,
+            author: None,
+        }
+    }
+}
+impl Default for MidiMeta {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// A custom Midi format (QMid).
 #[derive(Debug, PartialEq, Clone)]
 pub struct Midi {
     /// Beats per minute.
     pub tempo: Tempo,
     /// Events happend in a beat.
     pub events: Vec<Event>,
+    /// Metadata.
+    pub meta: MidiMeta,
 }
 impl Midi {
     /// Create a new [`Midi`] object.
@@ -67,6 +93,7 @@ impl Midi {
         Self {
             tempo: Tempo::new_unchecked(0.0),
             events: vec![],
+            meta: MidiMeta::new(),
         }
     }
     /// Create a new [`Midi`] object with given `tempo`.
@@ -74,6 +101,7 @@ impl Midi {
         Self {
             tempo,
             events: vec![],
+            meta: MidiMeta::new(),
         }
     }
     /// Create a new [`Midi`] object with given `events`.
@@ -81,6 +109,15 @@ impl Midi {
         Self {
             tempo: Tempo::new_unchecked(0.0),
             events,
+            meta: MidiMeta::new(),
+        }
+    }
+    /// Create a new [`Midi`] object with given `meta`.
+    pub fn with_meta(meta: MidiMeta) -> Self {
+        Self {
+            tempo: Tempo::new_unchecked(0.0),
+            events: vec![],
+            meta,
         }
     }
     /// Transposition: take self, return a new sequence with all notes shifted by semitone offset.
@@ -148,6 +185,8 @@ pub struct MidiRaw<'a> {
     pub tempo: f32,
     /// Raw events
     pub events: &'a [EventRaw<'a>],
+    /// Metadata.
+    pub meta: MidiMeta,
 }
 impl<'a> MidiRaw<'a> {
     /// Create a new [`MidiRaw`] object.
@@ -155,6 +194,7 @@ impl<'a> MidiRaw<'a> {
         Self {
             tempo: 0.0,
             events: &[],
+            meta: MidiMeta::new(),
         }
     }
 
@@ -163,6 +203,7 @@ impl<'a> MidiRaw<'a> {
         Midi {
             tempo: Tempo::new_unchecked(self.tempo),
             events: self.events.iter().map(|er| er.to_runtime()).collect(),
+            meta: self.meta,
         }
     }
 }
@@ -182,9 +223,28 @@ pub fn semi2freq(semi: i32) -> Frequency {
 pub type Bytes = Vec<u8>;
 
 /// Version.
-pub const VERSION: u16 = 0x0002;
+pub const VERSION: u16 = 0x0003;
 
 /// Magic number.
 ///
 /// ASCII: QMid
 pub const MAGIC: &[u8] = &[0x51, 0x4D, 0x69, 0x64];
+
+/// Length of the `copyright` field in the [`MidiMeta`].
+pub const COPYRIGHT_LEN: usize = 96;
+/// Length of the `author` field in the [`MidiMeta`].
+pub const AUTHOR_LEN: usize = 32;
+/// Length of the `song_name` field in the [`MidiMeta`].
+pub const SONG_NAME_LEN: usize = 48;
+/// Length of the QMid header (Bytes).
+pub const HEADER_LEN: usize = 718;
+
+/// Default metadata for this crate.
+#[cfg(feature = "songs")]
+pub const DEFAULT_META: MidiMeta = MidiMeta {
+    song_name: None,
+    copyright: Some(FixedString::<COPYRIGHT_LEN>::from_str_const(
+        "Copyright (c) 2026 FishgameStudio",
+    )),
+    author: Some(FixedString::<AUTHOR_LEN>::from_str_const("Nicola Grey")),
+};

@@ -4,6 +4,7 @@ use crate::midi::{MidiRaw, event_const as e, midi_const as m};
 
 /// This is a test to check if the detection function is normal.
 pub const TEST: MidiRaw = m!(
+    "Test",
     80.0,
     e!(0.0, [("C4", 1.0, BrightAcousticPiano), ("C5", 1.0, Violin)]),
     e!(1.0, [("D4", 1.0, BrightAcousticPiano), ("D5", 1.0, Violin)]),
@@ -25,6 +26,7 @@ pub const TEST: MidiRaw = m!(
 
 /// Song: *Twinkle Twinkle Little Star*
 pub const LITTLE_STAR: MidiRaw = m!(
+    "Twinkle Twinkle Little Star",
     80.0,
     e!(0.0, [("C3", 1.0), ("C5", 1.0)]),
     e!(1.0, [("C4", 1.0), ("C5", 1.0)]),
@@ -78,6 +80,7 @@ pub const LITTLE_STAR: MidiRaw = m!(
 ///
 /// Play this on your friend's birthday!
 pub const BIRTHDAY_SONG: MidiRaw = m!(
+    "Birthday Song",
     80.0,
     e!(0.0, [("G5", 0.7)]),
     e!(0.7, [("G5", 0.3)]),
@@ -111,6 +114,7 @@ pub const BIRTHDAY_SONG: MidiRaw = m!(
 
 /// Song: *Ode to Joy*
 pub const ODE_TO_JOY: MidiRaw = m!(
+    "Ode to Joy",
     114.0,
     e!(0.0, [("E5", 1.0, Violin), ("C4", 4.0, Violin)]),
     e!(1.0, [("E5", 1.0, Violin)]),
@@ -178,6 +182,7 @@ pub const ODE_TO_JOY: MidiRaw = m!(
 
 /// Song: *Jingle Bells*
 pub const JINGLE_BELLS: MidiRaw = m!(
+    "Jingle Bells",
     120.0,
     e!(0.0, [("E5", 1.0, MusicBox), ("C4", 1.0, MusicBox)]),
     e!(1.0, [("E5", 1.0, MusicBox), ("G4", 1.0, MusicBox)]),

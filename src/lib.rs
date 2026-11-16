@@ -104,6 +104,9 @@ pub enum Error {
     /// Unknwon timbre identifier number while deserializing.
     #[error("Unknwon timbre identifier number while deserializing: {0}")]
     UnknownTimbreNum(i32),
+    /// FixedString parse error
+    #[error("FixedString parse error: {0}")]
+    FixedStringParseError(#[from] crate::midi::fixed_string::FixedStringParseError),
 }
 
 #[cfg(test)]

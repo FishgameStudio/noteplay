@@ -1,6 +1,7 @@
 #![doc = include_str!("./README.md")]
 
 pub(crate) mod deserializer;
+pub(crate) mod fixed_string;
 pub(crate) mod macros;
 pub(crate) mod player;
 pub(crate) mod serializer;
@@ -8,10 +9,14 @@ pub(crate) mod types;
 pub(crate) mod utils;
 
 pub use deserializer::deserialize;
+pub use fixed_string::FixedString;
 pub use macros::{event, event_const, midi, midi_const, repeat};
 pub use player::MidiPlayer;
 pub use serializer::serialize;
-pub use types::{Event, EventRaw, Midi, MidiRaw, Note};
+pub use types::{
+    AUTHOR_LEN, COPYRIGHT_LEN, DEFAULT_META, Event, EventRaw, MAGIC, Midi, MidiMeta, MidiRaw, Note,
+    SONG_NAME_LEN, VERSION,
+};
 pub use utils::*;
 
 #[cfg(test)]
@@ -76,6 +81,7 @@ mod tests {
                     delta_beat: 2.0,
                 },
             ],
+            ..Midi::default()
         };
 
         let bin = serialize(&midi);
@@ -123,6 +129,7 @@ mod tests {
                         delta_beat: 2.0,
                     },
                 ],
+                ..Midi::default()
             },
             &actual,
         );

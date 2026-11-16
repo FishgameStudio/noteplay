@@ -3,13 +3,13 @@
 use crate::Error;
 use crate::core::Frequency;
 use crate::core::types::Tempo;
-use crate::midi::Note;
-use crate::midi::types::{Bytes, Event, MAGIC, Midi, VERSION};
+use crate::midi::types::{Bytes, Event, HEADER_LEN, MAGIC, Midi, VERSION};
+use crate::midi::{AUTHOR_LEN, COPYRIGHT_LEN, FixedString, MidiMeta, Note, SONG_NAME_LEN};
 use crate::soundfont::Timbre;
 
 use std::io::{Cursor, Read};
 
-/// Deserialize binary which serialized with function [`serialize()`](crate::midi::serialize).
+/// Deserialize binary which serialized with function [`serialize`](crate::midi::serialize).
 ///
 /// # Errors
 /// If the format is invalid.
@@ -20,7 +20,7 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
     }
 
     let mut r = Cursor::new(&bin);
-    if bin.len() < 14 {
+    if bin.len() < HEADER_LEN {
         error("Binary too short")?;
     }
     // Magic number
@@ -47,6 +47,18 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
     let mut event_cnt_buf = [0u8; 4];
     r.read_exact(&mut event_cnt_buf)?;
     let event_count = u32::from_le_bytes(event_cnt_buf);
+    // Song name
+    let mut song_name_buf = [0u8; SONG_NAME_LEN * 4];
+    r.read_exact(&mut song_name_buf)?;
+    let song_name = FixedString::<SONG_NAME_LEN>::from_le_bytes(&song_name_buf)?;
+    // Copyright
+    let mut copyright_buf = [0u8; COPYRIGHT_LEN * 4];
+    r.read_exact(&mut copyright_buf)?;
+    let copyright = FixedString::<COPYRIGHT_LEN>::from_le_bytes(&copyright_buf)?;
+    // Author
+    let mut author_buf = [0u8; AUTHOR_LEN * 4];
+    r.read_exact(&mut author_buf)?;
+    let author = FixedString::<AUTHOR_LEN>::from_le_bytes(&author_buf)?;
 
     let mut events = Vec::with_capacity(event_count as usize);
     for _ in 0..event_count {
@@ -85,5 +97,10 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
     Ok(Midi {
         tempo: Tempo::new(tempo)?,
         events,
+        meta: MidiMeta {
+            song_name: Some(song_name).filter(|s| !s.is_all_null()),
+            author: Some(author).filter(|s| !s.is_all_null()),
+            copyright: Some(copyright).filter(|s| !s.is_all_null()),
+        },
     })
 }

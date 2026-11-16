@@ -1,7 +1,6 @@
 //! Structure serializer.
 
-use crate::midi::types::{Bytes, Midi};
-use crate::midi::types::{MAGIC, VERSION};
+use crate::midi::types::{Bytes, MAGIC, Midi, VERSION};
 
 /// Serialize a [`Midi`] structure to binary.
 pub fn serialize(midi: &Midi) -> Bytes {
@@ -9,13 +8,19 @@ pub fn serialize(midi: &Midi) -> Bytes {
 
     /*
      * Header:
-     * magic number + version + BPM + events_count
+     * magic number + version + BPM + events_count + Meta
+     * Meta:
+     * song_name + copyright + author
+     * Total 718 bytes.
      */
     let mut header: Bytes = vec![];
     header.extend(MAGIC);
     header.extend(&VERSION.to_le_bytes());
     header.extend(&midi.tempo.get_tempo().to_le_bytes());
     header.extend(&(midi.events.len() as u32).to_le_bytes());
+    header.extend(&midi.meta.song_name.unwrap_or_default().to_u32_le_bytes());
+    header.extend(&midi.meta.copyright.unwrap_or_default().to_u32_le_bytes());
+    header.extend(&midi.meta.author.unwrap_or_default().to_u32_le_bytes());
 
     buf.extend(header);
 
