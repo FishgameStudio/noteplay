@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
-The module `songs` included in the feature `songs`.
+The module `songs` included in the feature `songs`, and the module `builtin_sf2` included in the feature `sf2`.
 Click [here](https://docs.rs/noteplay/latest/noteplay) to view the full documentation.
 
 ## 🤝 Contributing
