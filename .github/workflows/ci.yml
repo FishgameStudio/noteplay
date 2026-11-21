@@ -38,7 +38,7 @@ jobs:
       - name: Build
         run: cargo build --all-features
       - name: Test
-        run: cargo test --all-features -- -D warnings
+        run: cargo test --all-features
 
   doc:
     name: Doc build
