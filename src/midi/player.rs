@@ -24,7 +24,7 @@ fn remaining_playback_beats(events: &[Event]) -> f32 {
     (latest_note_end - elapsed_beats).max(0.0)
 }
 
-/// QMid player
+/// `QMid` player
 #[derive(Debug)]
 pub struct MidiPlayer;
 
@@ -88,8 +88,8 @@ mod tests {
 
     #[test]
     fn note_articulation_shortens_duration_without_changing_beats() {
-        assert_eq!(articulated_duration_beats(1.0), 0.95);
-        assert_eq!(articulated_duration_beats(0.5), 0.475);
+        assert!((articulated_duration_beats(1.0) - 0.95).abs() < 1e-5);
+        assert!((articulated_duration_beats(0.5) - 0.475).abs() < 1e-5);
     }
 
     #[test]

@@ -3,6 +3,7 @@
 use crate::midi::types::{Bytes, MAGIC, Midi, VERSION};
 
 /// Serialize a [`Midi`] structure to binary.
+#[must_use]
 pub fn serialize(midi: &Midi) -> Bytes {
     let mut buf: Bytes = Vec::new();
 

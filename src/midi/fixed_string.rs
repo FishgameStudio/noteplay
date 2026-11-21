@@ -30,6 +30,7 @@ impl<const N: usize> FixedString<N> {
     /// assert_eq!(FixedString::<3>::new().buf, ['\0', '\0', '\0']);
     /// # }
     /// ```
+    #[must_use]
     pub const fn new() -> Self {
         Self { buf: ['\0'; N] }
     }
@@ -44,10 +45,12 @@ impl<const N: usize> FixedString<N> {
     /// assert_eq!(fstr.len(), 10);
     /// # }
     /// ```
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.buf.len()
     }
-    /// Returns if the FixedString is empty.
+    /// Returns if the `FixedString` is empty.
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         N == 0
     }
@@ -83,6 +86,7 @@ impl<const N: usize> FixedString<N> {
     /// assert_eq!(fstr.to_utf8(), vec![104, 101, 108, 108, 111]);
     /// # }
     /// ```
+    #[must_use]
     pub fn to_utf8(&self) -> Vec<u8> {
         let mut out = Vec::new();
         let end = self.len();
@@ -103,6 +107,7 @@ impl<const N: usize> FixedString<N> {
     /// assert_eq!(fstr.to_u32_array(), [97, 98, 99]);
     /// # }
     /// ```
+    #[must_use]
     pub fn to_u32_array(&self) -> Vec<u32> {
         self.buf.iter().map(|&c| c as u32).collect()
     }
@@ -111,7 +116,7 @@ impl<const N: usize> FixedString<N> {
     pub fn to_u32_le_bytes(&self) -> Vec<u8> {
         self.to_u32_array()
             .into_iter()
-            .flat_map(|u| u.to_le_bytes())
+            .flat_map(u32::to_le_bytes)
             .collect()
     }
     /// Creates a native endian fixed string from its
@@ -132,10 +137,12 @@ impl<const N: usize> FixedString<N> {
         Ok(Self { buf: chars })
     }
     /// Returns if the `buf` field is all null (`'\0'`).
+    #[must_use]
     pub fn is_all_null(&self) -> bool {
         self.buf.iter().all(|ch| *ch == '\0')
     }
     /// Remove trailing null ('\0').
+    #[must_use]
     pub fn trim_end_null(&self) -> String {
         let slice = self.buf.as_slice();
         let end_pos = slice
@@ -145,8 +152,9 @@ impl<const N: usize> FixedString<N> {
             .unwrap_or(0);
         slice[0..end_pos].iter().collect::<String>()
     }
-    /// Const version: convert &str to FixedString, truncate / pad '\0'.
+    /// Const version: convert &str to `FixedString`, truncate / pad '\0'.
     /// Works in const context.
+    #[must_use]
     pub const fn from_str_const(s: &str) -> Self {
         let mut buf = ['\0'; N];
         let bytes = s.as_bytes();

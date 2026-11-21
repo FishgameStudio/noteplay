@@ -24,6 +24,7 @@ pub struct Event {
 }
 impl Event {
     /// Create a new [`Event`] object.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             notes: vec![],
@@ -31,6 +32,7 @@ impl Event {
         }
     }
     /// Create a new [`Event`] object with given `delta_beat`.
+    #[must_use]
     pub const fn with_delta_beat(delta_beat: f32) -> Self {
         Self {
             notes: vec![],
@@ -38,6 +40,7 @@ impl Event {
         }
     }
     /// Create a new [`Event`] object with given `notes`.
+    #[must_use]
     pub const fn with_notes(notes: Vec<Note>) -> Self {
         Self {
             notes,
@@ -63,6 +66,7 @@ pub struct MidiMeta {
 }
 impl MidiMeta {
     /// Create a new [`MidiMeta`] object.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             song_name: None,
@@ -77,7 +81,7 @@ impl Default for MidiMeta {
     }
 }
 
-/// A custom Midi format (QMid).
+/// A custom Midi format (`QMid`).
 #[derive(Debug, PartialEq, Clone)]
 pub struct Midi {
     /// Beats per minute.
@@ -89,6 +93,7 @@ pub struct Midi {
 }
 impl Midi {
     /// Create a new [`Midi`] object.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             tempo: Tempo::new_unchecked(0.0),
@@ -97,6 +102,7 @@ impl Midi {
         }
     }
     /// Create a new [`Midi`] object with given `tempo`.
+    #[must_use]
     pub const fn with_tempo(tempo: Tempo) -> Self {
         Self {
             tempo,
@@ -105,6 +111,7 @@ impl Midi {
         }
     }
     /// Create a new [`Midi`] object with given `events`.
+    #[must_use]
     pub fn with_events(events: Vec<Event>) -> Self {
         Self {
             tempo: Tempo::new_unchecked(0.0),
@@ -113,6 +120,7 @@ impl Midi {
         }
     }
     /// Create a new [`Midi`] object with given `meta`.
+    #[must_use]
     pub fn with_meta(meta: MidiMeta) -> Self {
         Self {
             tempo: Tempo::new_unchecked(0.0),
@@ -121,6 +129,7 @@ impl Midi {
         }
     }
     /// Transposition: take self, return a new sequence with all notes shifted by semitone offset.
+    #[must_use]
     pub fn transposed(mut self, offset: i32) -> Self {
         let factor = (offset as f32 / 12.0).exp2();
         for e in &mut self.events {
@@ -149,6 +158,7 @@ pub struct EventRaw<'a> {
 }
 impl<'a> EventRaw<'a> {
     /// Create a new [`EventRaw`] object.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             notes: &[],
@@ -158,6 +168,7 @@ impl<'a> EventRaw<'a> {
 
     /// Convert to a runtime type [`Event`].
     /// Calculates frequency from semi offset using standard exp2.
+    #[must_use]
     pub fn to_runtime(self) -> Event {
         let notes: Vec<Note> = self
             .notes
@@ -190,6 +201,7 @@ pub struct MidiRaw<'a> {
 }
 impl<'a> MidiRaw<'a> {
     /// Create a new [`MidiRaw`] object.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             tempo: 0.0,
@@ -199,6 +211,7 @@ impl<'a> MidiRaw<'a> {
     }
 
     /// Convert to a runtime type [`Midi`].
+    #[must_use]
     pub fn to_runtime(self) -> Midi {
         Midi {
             tempo: Tempo::new_unchecked(self.tempo),
@@ -227,7 +240,7 @@ pub const VERSION: u16 = 0x0003;
 
 /// Magic number.
 ///
-/// ASCII: QMid
+/// ASCII: `QMid`
 pub const MAGIC: &[u8] = &[0x51, 0x4D, 0x69, 0x64];
 
 /// Length of the `copyright` field in the [`MidiMeta`].
@@ -236,7 +249,7 @@ pub const COPYRIGHT_LEN: usize = 96;
 pub const AUTHOR_LEN: usize = 32;
 /// Length of the `song_name` field in the [`MidiMeta`].
 pub const SONG_NAME_LEN: usize = 48;
-/// Length of the QMid header (Bytes).
+/// Length of the `QMid` header (Bytes).
 pub const HEADER_LEN: usize = 718;
 
 /// Default metadata for this crate.

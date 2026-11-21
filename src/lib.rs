@@ -5,6 +5,16 @@
 #![deny(non_upper_case_globals)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(unused_must_use)]
+#![deny(clippy::unreachable)]
+#![warn(clippy::float_cmp)]
+#![warn(clippy::if_not_else)]
+#![warn(clippy::needless_borrow)]
+#![warn(clippy::redundant_closure_for_method_calls)]
+#![warn(clippy::unused_self)]
+#![warn(clippy::useless_let_if_seq)]
+#![warn(clippy::match_wildcard_for_single_variants)]
+#![warn(clippy::same_name_method)]
+#![warn(clippy::self_named_module_files)]
 #![warn(rustdoc::broken_intra_doc_links)]
 #![warn(rustdoc::invalid_html_tags)]
 #![warn(clippy::all)]
@@ -15,6 +25,8 @@
 #![warn(clippy::todo)]
 #![warn(clippy::unimplemented)]
 #![warn(clippy::semicolon_if_nothing_returned)]
+#![warn(clippy::doc_markdown)]
+#![warn(clippy::must_use_candidate)]
 #![allow(clippy::redundant_pub_crate)]
 
 //! # Noteplay: Note & Midi Player for Rust
@@ -105,7 +117,7 @@ pub enum Error {
     /// Unknown timbre identifier number while deserializing.
     #[error("Unknown timbre identifier number while deserializing: {0}")]
     UnknownTimbreNum(i32),
-    /// FixedString parse error
+    /// `FixedString` parse error
     #[error("FixedString parse error: {0}")]
     FixedStringParseError(#[from] crate::midi::fixed_string::FixedStringParseError),
 }

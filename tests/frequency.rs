@@ -52,11 +52,11 @@ fn is_valid_note_accepts_valid_notes_and_rejects_invalid_ones() {
 #[test]
 #[should_panic(expected = "Invalid note format: unexpected end while parsing base")]
 fn note2freq_panics_if_empty() {
-    note2freq("");
+    let _ = note2freq("");
 }
 
 #[test]
 #[should_panic(expected = "Invalid note format: unknown semitone: K")]
 fn note2freq_panics_if_base_is_unknown() {
-    note2freq("K4");
+    let _ = note2freq("K4");
 }

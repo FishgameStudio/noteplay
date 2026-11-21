@@ -55,6 +55,7 @@ impl NotePlayer {
     }
 
     /// Get the timbre.
+    #[must_use]
     pub const fn get_timbre(&self) -> Timbre {
         self.timbre
     }

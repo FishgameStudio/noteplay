@@ -17,10 +17,11 @@ pub(crate) fn make_synth(
     sf: &Arc<SoundFont>,
     timbre: Timbre,
 ) -> Result<(Synthesizer, SynthesizerSettings), Error> {
+    const CHANNEL: i32 = 0;
+
     let settings = SynthesizerSettings::new(44100);
     let mut synth = Synthesizer::new(sf, &settings)?;
 
-    const CHANNEL: i32 = 0;
     if let Some(prog) = timbre.to_program() {
         synth.process_midi_message(CHANNEL, 0xC0, prog as i32, 0);
     }

@@ -5,6 +5,7 @@ use crate::core::types::{Frequency, Semitones};
 /// Parse note and give a frequency.
 /// # Panics
 /// If the format of the note is invalid.
+#[must_use]
 pub fn note2freq(note: &str) -> Frequency {
     let note = note.trim().to_ascii_uppercase(); // All uppercase
     let mut chars = note.chars().peekable();
@@ -47,6 +48,7 @@ pub fn note2freq(note: &str) -> Frequency {
 ///
 /// # Panics
 /// Invalid byte format, unknown base note, bad octave digit.
+#[must_use]
 pub const fn note2semi(note: &str) -> Semitones {
     let b = note.as_bytes();
     let len = b.len();
@@ -94,6 +96,7 @@ pub const fn note2semi(note: &str) -> Semitones {
 }
 
 /// Runtime: convert semi offset(A4=0) to exact frequency Hz
+#[must_use]
 pub fn semi2freq(semi: Semitones) -> Frequency {
     Frequency::new_unchecked(440.0 * (semi as f32 / 12.0).exp2())
 }
@@ -113,6 +116,7 @@ pub fn semi2freq(semi: Semitones) -> Frequency {
 /// assert!(!is_valid_note("abc"));
 /// # }
 /// ```
+#[must_use]
 pub fn is_valid_note(note: &str) -> bool {
     let note = note.trim().to_ascii_uppercase();
     let mut chars = note.chars().peekable();
@@ -165,18 +169,18 @@ mod tests {
     #[test]
     #[should_panic(expected = "Invalid note format: unexpected end while parsing base")]
     fn note2freq_should_panic_if_empty() {
-        note2freq("");
+        let _ = note2freq("");
     }
 
     #[test]
     #[should_panic(expected = "Invalid note format: unknown semitone: 1")]
     fn note2freq_should_panic_if_format_is_invalid() {
-        note2freq("123123");
+        let _ = note2freq("123123");
     }
 
     #[test]
     #[should_panic(expected = "Invalid note format: unknown semitone: K")]
     fn note2freq_should_panic_if_base_is_unknown() {
-        note2freq("K4");
+        let _ = note2freq("K4");
     }
 }

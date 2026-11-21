@@ -1,4 +1,4 @@
-//! Helpful utilities to construct your QMid file.
+//! Helpful utilities to construct your `QMid` file.
 
 use crate::Error;
 use crate::core::{Frequency, note2semi};

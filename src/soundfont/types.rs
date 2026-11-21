@@ -164,15 +164,17 @@ pub enum Timbre {
 }
 impl Timbre {
     /// Convert to program number, [`None`] if it is [`Timbre::Default`](Self::Default).
+    #[must_use]
     pub const fn to_program(self) -> Option<u32> {
         match self {
             Self::Default => None,
-            other => Some(other as i32 as u32),
+            other => Some(other as u32),
         }
     }
 }
 
 #[inline]
+/// Convert to a Midi note number.
 pub(crate) fn freq_to_midi(freq: f32) -> i32 {
     let midi = 12.0f32.mul_add((freq / 440.0).log2(), 69.0);
     midi.clamp(0.0, 127.0).round() as i32
@@ -264,7 +266,7 @@ struct ActiveNote {
     remaining_samples: u64,
 }
 
-/// A single rodio source that advances the SoundFont synthesizer's shared timeline.
+/// A single rodio source that advances the `SoundFont` synthesizer's shared timeline.
 pub(crate) struct SynthSource {
     engine: Arc<Mutex<SynthEngine>>,
     sample_rate: NonZero<u32>,

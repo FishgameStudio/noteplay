@@ -28,12 +28,14 @@ impl Frequency {
     ///
     /// # Panics
     /// If the freq is invalid.
+    #[must_use]
     pub fn new_unchecked(freq: f32) -> Self {
         assert!(freq.is_finite() && freq >= 0.0);
         Self { freq }
     }
 
     /// Get the frequency.
+    #[must_use]
     pub const fn get_freq(&self) -> f32 {
         self.freq
     }
@@ -79,12 +81,14 @@ impl Tempo {
     ///
     /// # Panics
     /// If the freq is invalid.
+    #[must_use]
     pub fn new_unchecked(tempo: f32) -> Self {
         assert!(tempo.is_finite() && tempo >= 0.0);
         Self { tempo }
     }
 
     /// Get the tempo.
+    #[must_use]
     pub const fn get_tempo(&self) -> f32 {
         self.tempo
     }
