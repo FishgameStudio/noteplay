@@ -6,6 +6,6 @@ use noteplay::songs::*;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut np = NotePlayer::new()?;
     np.set_soundfont_from_bytes(TIMGM6MB)?;
-    MidiPlayer::play(&TEST.to_runtime(), &mut np);
+    MidiPlayer::play(&SILENT_NIGHT.to_runtime(), &mut np);
     Ok(())
 }
