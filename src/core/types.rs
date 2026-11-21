@@ -1,4 +1,4 @@
-//! Main type difinitions.
+//! Main type definitions.
 
 use crate::Error;
 

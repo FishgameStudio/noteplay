@@ -251,7 +251,7 @@ pub const JINGLE_BELLS: MidiRaw = m!(
 
 /// Song: *Silent Night*
 pub const SILENT_NIGHT: MidiRaw = m!(
-    "Slient Night",
+    "Silent Night",
     88.0,
     e!(
         0.0,

@@ -82,7 +82,7 @@ impl Default for MidiMeta {
 pub struct Midi {
     /// Beats per minute.
     pub tempo: Tempo,
-    /// Events happend in a beat.
+    /// Events happened in a beat.
     pub events: Vec<Event>,
     /// Metadata.
     pub meta: MidiMeta,
