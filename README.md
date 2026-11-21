@@ -31,7 +31,7 @@ cargo add noteplay
 Or add this to your `Cargo.toml`:
 
 ```toml
-noteplay = { version = "0.1.0", features = ["full"] }
+noteplay = { features = ["full"] }
 ```
 
 ### 💡 Usage
