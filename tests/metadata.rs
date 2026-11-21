@@ -11,7 +11,10 @@ fn midi_meta_defaults_are_empty() {
 #[test]
 fn default_meta_contains_crate_metadata() {
     assert!(DEFAULT_META.song_name.is_none());
-    assert_eq!(DEFAULT_META.copyright.unwrap().trim_end_null(), "Copyright (c) 2026 FishgameStudio");
+    assert_eq!(
+        DEFAULT_META.copyright.unwrap().trim_end_null(),
+        "Copyright (c) 2026 FishgameStudio"
+    );
     assert_eq!(DEFAULT_META.author.unwrap().trim_end_null(), "Nicola Grey");
 }
 
@@ -30,7 +33,10 @@ fn midi_builder_helpers_set_the_expected_fields() {
     let with_meta = Midi::with_meta(meta);
     assert_eq!(with_meta.meta.song_name.unwrap().trim_end_null(), "Title");
     assert_eq!(with_meta.meta.author.unwrap().trim_end_null(), "Alice");
-    assert_eq!(with_meta.meta.copyright.unwrap().trim_end_null(), "Copyright 2026");
+    assert_eq!(
+        with_meta.meta.copyright.unwrap().trim_end_null(),
+        "Copyright 2026"
+    );
 }
 
 #[test]

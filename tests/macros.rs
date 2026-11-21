@@ -71,7 +71,9 @@ fn const_macros_build_equivalent_runtime_data() {
 fn midi_meta_and_fixed_string_round_trip() {
     let meta = MidiMeta {
         song_name: Some(FixedString::<SONG_NAME_LEN>::from_str_const("Title")),
-        copyright: Some(FixedString::<COPYRIGHT_LEN>::from_str_const("Copyright 2026")),
+        copyright: Some(FixedString::<COPYRIGHT_LEN>::from_str_const(
+            "Copyright 2026",
+        )),
         author: Some(FixedString::<AUTHOR_LEN>::from_str_const("Author")),
     };
 
