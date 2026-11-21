@@ -7,7 +7,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_ENCODED_RUSTFLAGS: "-D warnings"
 
 jobs:
   check:
@@ -24,7 +23,7 @@ jobs:
       - name: Check format
         run: cargo fmt --all -- --check
       - name: Clippy lint
-        run: cargo clippy --all-targets --all-features
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
     name: Build & Test
@@ -38,8 +37,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Build
         run: cargo build --all-features
-      - name: Test (unit + doctest)
-        run: cargo test --all-features
+      - name: Test
+        run: cargo test --all-features -- -D warnings
 
   doc:
     name: Doc build
@@ -52,4 +51,6 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
       - name: Build docs
-        run: cargo doc --all-features --no-deps 
+        run: cargo doc --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: "-D warnings"
