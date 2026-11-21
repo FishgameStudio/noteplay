@@ -1,5 +1,37 @@
 # Changelog
 
+# [0.2.1] - 2026-11-21
+
+### Added
+
+- Add `readme = "README.md"` to `Cargo.toml` for crates.io display
+- Add `#[must_use]` to many pure functions, constructors, getter methods and conversion APIs
+- Add more clippy lints to the crate lint set: `clippy::unreachable`, `clippy::float_cmp`, `clippy::if_not_else`, `clippy::needless_borrow`, `clippy::redundant_closure_for_method_calls`, `clippy::unused_self`, `clippy::useless_let_if_seq`, `clippy::match_wildcard_for_single_variants`, `clippy::same_name_method`, `clippy::self_named_module_files`, `clippy::doc_markdown`, `clippy::must_use_candidate`
+- Add explicit `RUSTDOCFLAGS = "-D warnings"` for docs build in CI
+
+### Changed
+
+- Bump version to `0.2.1`
+- CI workflow refactor: move `-D warnings` from encoded env into clippy command argument, separate doc warning flag
+- README: update dependency snippet, document that `builtin_sf2` module comes under `sf2` feature
+- Doc polish: wrap identifiers like `QMid`, `FixedString`, `SoundFont` with backticks consistently
+- `Timbre::to_program`: simplify cast chain
+- `FixedString::to_u32_le_bytes`: use `u32::to_le_bytes` directly
+- Float comparison test: replace exact `==` with epsilon comparison to avoid float equality lint
+- Panic tests: add `let _ =` to satisfy `unused_must_use` when calling `note2freq`
+- Some `should_panic` tests removed the exact `expected` message check, replaced with `assert!(has_output_device())` for hardware-dependent playback tests
+
+### CI
+
+- Clippy runs with `-D warnings` explicitly
+- Documentation build fails on doc warnings
+- Simplify test job name and steps
+
+### Internal
+
+- Reorder local constant definition in soundfont loader
+- Clean up wording in error variants and module doc comments
+
 ## [0.2.0] - 2026-11-21
 
 ### Added
