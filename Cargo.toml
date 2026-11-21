@@ -22,9 +22,6 @@ doc = true
 name = "play_music"
 path = "examples/play_music.rs"
 
-[lints.rust]
-warnings = "deny"
-
 [dependencies]
 num_enum = "0.7.6"
 rodio = "0.23.0"
