@@ -2,7 +2,7 @@
 
 use crate::Error;
 use crate::core::{Frequency, note2semi};
-use crate::midi::types::{Event, Note};
+use crate::midi::types::{Event, Midi, Note};
 use crate::soundfont::Timbre;
 
 /// Parse chords and generate a corresponding [`Event`] that stores the chord.
@@ -228,6 +228,87 @@ where
     Ok(midi.meta)
 }
 
+/// Merge two midi as one midi, the audio track will be stacked.
+/// # Errors
+/// If the tempo or meta is not same.
+pub fn merge_two_midi(a: &Midi, b: &Midi) -> Result<Midi, Error> {
+    #[inline]
+    fn error(msg: &str) -> Result<Midi, Error> {
+        Err(Error::MergeMidi(msg.into()))
+    }
+
+    if a.tempo != b.tempo {
+        return error("tempos are different");
+    }
+    if a.meta != b.meta {
+        return error("metadata are different");
+    }
+
+    /// Convert delta event list -> (`absolute_beat`, `notes`)
+    fn to_absolute(events: &[Event]) -> Vec<(f32, Vec<Note>)> {
+        let mut out = Vec::new();
+        let mut now = 0.0;
+        for ev in events {
+            now += ev.delta_beat;
+            out.push((now, ev.notes.clone()));
+        }
+        out
+    }
+
+    let abs_a = to_absolute(&a.events);
+    let abs_b = to_absolute(&b.events);
+
+    // Merge two sorted lists (merge sort)
+    let mut i = 0;
+    let mut j = 0;
+    let mut merged_abs = Vec::new();
+    while i < abs_a.len() && j < abs_b.len() {
+        let (ta, na) = &abs_a[i];
+        let (tb, nb) = &abs_b[j];
+
+        if *ta < *tb {
+            merged_abs.push((*ta, na.clone()));
+            i += 1;
+        } else if *tb < *ta {
+            merged_abs.push((*tb, nb.clone()));
+            j += 1;
+        } else {
+            // same time: stack notes together
+            let mut all = na.clone();
+            all.extend(nb.clone());
+            merged_abs.push((*ta, all));
+            i += 1;
+            j += 1;
+        }
+    }
+    while i < abs_a.len() {
+        merged_abs.push(abs_a[i].clone());
+        i += 1;
+    }
+    while j < abs_b.len() {
+        merged_abs.push(abs_b[j].clone());
+        j += 1;
+    }
+
+    // Convert absolute list back to delta-beat Event stream
+    let mut events = Vec::new();
+    let mut prev = 0.0;
+    for (t, notes) in merged_abs {
+        let delta = t - prev;
+        events.push(Event {
+            delta_beat: delta,
+            notes,
+        });
+        prev = t;
+    }
+
+    Ok(Midi {
+        meta: a.meta,
+        tempo: a.tempo,
+        events,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -323,5 +404,116 @@ mod tests {
         assert!(
             matches!(res, Err(Error::InvalidChord(msg)) if msg.contains("Unknown chord suffix"))
         );
+    }
+
+    use crate::core::types::{Frequency, Tempo};
+    use crate::midi::types::{Event, Midi, Note};
+    use crate::soundfont::types::Timbre;
+
+    fn note_test(hz: f32) -> Note {
+        (Frequency::new_unchecked(hz), 0.25, Timbre::Default, 80)
+    }
+
+    fn midi_test(tempo_bpm: f32, events: Vec<Event>) -> Midi {
+        Midi {
+            tempo: Tempo::new_unchecked(tempo_bpm),
+            events,
+            meta: crate::midi::types::DEFAULT_META,
+        }
+    }
+
+    #[test]
+    fn merge_same_time_stack_notes() {
+        let note1 = note_test(440.0);
+        let note2 = note_test(523.25);
+
+        let a = midi_test(
+            120.0,
+            vec![Event {
+                delta_beat: 1.0,
+                notes: vec![note1],
+            }],
+        );
+        let b = midi_test(
+            120.0,
+            vec![Event {
+                delta_beat: 1.0,
+                notes: vec![note2],
+            }],
+        );
+
+        let out = merge_two_midi(&a, &b).unwrap();
+        assert_eq!(out.events.len(), 1);
+        let ev = &out.events[0];
+        assert!((ev.delta_beat - 1.0).abs() < 1e-5);
+        assert_eq!(ev.notes.len(), 2);
+    }
+
+    #[test]
+    fn merge_events_in_sequence() {
+        let n1 = note_test(440.0);
+        let n2 = note_test(493.88);
+        let n3 = note_test(523.25);
+
+        let a = midi_test(
+            120.0,
+            vec![
+                Event {
+                    delta_beat: 1.0,
+                    notes: vec![n1],
+                },
+                Event {
+                    delta_beat: 1.0,
+                    notes: vec![n2],
+                },
+            ],
+        );
+        let b = midi_test(
+            120.0,
+            vec![Event {
+                delta_beat: 1.5,
+                notes: vec![n3],
+            }],
+        );
+
+        let out = merge_two_midi(&a, &b).unwrap();
+        assert_eq!(out.events.len(), 3);
+        // times: 1.0, 1.5, 2.0
+    }
+
+    #[test]
+    fn merge_one_empty() {
+        let n = note_test(440.0);
+        let a = midi_test(
+            120.0,
+            vec![Event {
+                delta_beat: 2.0,
+                notes: vec![n],
+            }],
+        );
+        let b = midi_test(120.0, Vec::new());
+
+        let out = merge_two_midi(&a, &b).unwrap();
+        assert_eq!(out.events.len(), 1);
+        assert!((out.events[0].delta_beat - 2.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn reject_different_tempo() {
+        let a = midi_test(120.0, Vec::new());
+        let b = midi_test(140.0, Vec::new());
+        let res = merge_two_midi(&a, &b);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn reject_different_meta() {
+        let a = midi_test(120.0, Vec::new());
+        let mut b = midi_test(120.0, Vec::new());
+        b.meta.song_name = Some(crate::midi::fixed_string::FixedString::from_str_const(
+            "test",
+        ));
+        let res = merge_two_midi(&a, &b);
+        assert!(res.is_err());
     }
 }

@@ -27,6 +27,7 @@
 #![warn(clippy::semicolon_if_nothing_returned)]
 #![warn(clippy::doc_markdown)]
 #![warn(clippy::must_use_candidate)]
+#![warn(clippy::missing_const_for_fn)]
 #![allow(clippy::redundant_pub_crate)]
 
 //! # Noteplay: Note & Midi Player for Rust
@@ -120,6 +121,9 @@ pub enum Error {
     /// `FixedString` parse error
     #[error("FixedString parse error: {0}")]
     FixedStringParseError(#[from] crate::midi::fixed_string::FixedStringParseError),
+    /// Failed to merge two midis.
+    #[error("Failed to merge two midis: {0}")]
+    MergeMidi(String),
 }
 
 #[cfg(test)]
