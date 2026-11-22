@@ -189,9 +189,10 @@ macro_rules! midi_const {
 /// Repeat an [`Event`](crate::midi::Event) object or an [`EventRaw`](crate::midi::EventRaw) object.
 #[macro_export]
 macro_rules! repeat {
-    ($event:expr,$repetitions:expr) => {
+    ($event:expr,$repetitions:expr) => {{
+        const _: $crate::midi::Event = $event;
         vec![$event; $repetitions]
-    };
+    }};
 }
 
 pub use {event, event_const, midi, midi_const, repeat};
