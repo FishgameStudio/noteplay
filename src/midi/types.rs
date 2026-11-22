@@ -94,7 +94,7 @@ pub struct Midi {
 impl Midi {
     /// Create a new [`Midi`] object.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             tempo: Tempo::new_unchecked(0.0),
             events: vec![],
@@ -112,7 +112,7 @@ impl Midi {
     }
     /// Create a new [`Midi`] object with given `events`.
     #[must_use]
-    pub fn with_events(events: Vec<Event>) -> Self {
+    pub const fn with_events(events: Vec<Event>) -> Self {
         Self {
             tempo: Tempo::new_unchecked(0.0),
             events,
@@ -121,7 +121,7 @@ impl Midi {
     }
     /// Create a new [`Midi`] object with given `meta`.
     #[must_use]
-    pub fn with_meta(meta: MidiMeta) -> Self {
+    pub const fn with_meta(meta: MidiMeta) -> Self {
         Self {
             tempo: Tempo::new_unchecked(0.0),
             events: vec![],

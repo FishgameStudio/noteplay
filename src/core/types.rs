@@ -13,7 +13,7 @@ impl Frequency {
     /// # Errors
     /// This function returns an [`Err`] value if the `freq`
     /// isn't finite or is less than 0.
-    pub fn new(freq: f32) -> Result<Self, Error> {
+    pub const fn new(freq: f32) -> Result<Self, Error> {
         if freq.is_finite() && freq >= 0.0 {
             Ok(Self { freq })
         } else {
@@ -29,7 +29,7 @@ impl Frequency {
     /// # Panics
     /// If the freq is invalid.
     #[must_use]
-    pub fn new_unchecked(freq: f32) -> Self {
+    pub const fn new_unchecked(freq: f32) -> Self {
         assert!(freq.is_finite() && freq >= 0.0);
         Self { freq }
     }
@@ -40,7 +40,7 @@ impl Frequency {
         self.freq
     }
     /// Set the frequency.
-    pub fn set_freq(&mut self, freq: f32) -> Result<(), Error> {
+    pub const fn set_freq(&mut self, freq: f32) -> Result<(), Error> {
         if freq.is_finite() && freq >= 0.0 {
             self.freq = freq;
             Ok(())
@@ -49,7 +49,7 @@ impl Frequency {
         }
     }
     /// Set the frequency **without validation**.
-    pub fn set_freq_unchecked(&mut self, freq: f32) {
+    pub const fn set_freq_unchecked(&mut self, freq: f32) {
         assert!(freq.is_finite() && freq >= 0.0);
         self.freq = freq;
     }
@@ -66,7 +66,7 @@ impl Tempo {
     /// # Errors
     /// This function returns an [`Err`] value if the `tempo`
     /// isn't finite or is less than 0.
-    pub fn new(tempo: f32) -> Result<Self, Error> {
+    pub const fn new(tempo: f32) -> Result<Self, Error> {
         if tempo.is_finite() && tempo >= 0.0 {
             Ok(Self { tempo })
         } else {
@@ -82,7 +82,7 @@ impl Tempo {
     /// # Panics
     /// If the freq is invalid.
     #[must_use]
-    pub fn new_unchecked(tempo: f32) -> Self {
+    pub const fn new_unchecked(tempo: f32) -> Self {
         assert!(tempo.is_finite() && tempo >= 0.0);
         Self { tempo }
     }
@@ -93,7 +93,7 @@ impl Tempo {
         self.tempo
     }
     /// Set the tempo.
-    pub fn set_tempo(&mut self, tempo: f32) -> Result<(), Error> {
+    pub const fn set_tempo(&mut self, tempo: f32) -> Result<(), Error> {
         if tempo.is_finite() && tempo >= 0.0 {
             self.tempo = tempo;
             Ok(())
@@ -102,7 +102,7 @@ impl Tempo {
         }
     }
     /// Set the tempo **without validation**.
-    pub fn set_tempo_unchecked(&mut self, tempo: f32) {
+    pub const fn set_tempo_unchecked(&mut self, tempo: f32) {
         assert!(tempo.is_finite() && tempo >= 0.0);
         self.tempo = tempo;
     }
