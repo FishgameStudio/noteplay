@@ -25,7 +25,7 @@
 Install `noteplay` crate by cargo:
 
 ```sh
-cargo add noteplay
+cargo add noteplay --features full
 ```
 
 Or add this to your `Cargo.toml`:
@@ -37,10 +37,7 @@ noteplay = { features = ["full"] }
 ### 💡 Usage
 
 ```rust,no_run
-use noteplay::builtin_sf2::TIMGM6MB;
-use noteplay::core::NotePlayer;
-use noteplay::midi::*;
-use noteplay::songs::*;
+use noteplay::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut np = NotePlayer::new()?;
@@ -49,7 +46,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
-The module `songs` included in the feature `songs`, and the module `builtin_sf2` included in the feature `sf2`.
 Click [here](https://docs.rs/noteplay/latest/noteplay) to view the full documentation.
 
 ## 🤝 Contributing
