@@ -36,7 +36,7 @@ Please use `gitmoji-cli` to commit. To install `gitmoji-cli`, please run:
 ```sh
 npm install -g gitmoji-cli
 # If you don't have npm, use cargo:
-# cargo install gimoji
+cargo install gitmoji2
 ```
 
 Please explain the title and the detail clearly, and don't add too many changes into one single commit.
