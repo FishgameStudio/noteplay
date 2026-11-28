@@ -11,17 +11,17 @@ use crate::soundfont::Timbre;
 ///
 /// Extension sounds: 7,6,9,11,13; variation sounds: b5 #5 b9 #9 #11 b13
 ///
-/// # Panics
-/// If used a 'm' after a 'sus'.
+/// # Errors
+/// If the format is invalid.
 ///
 /// # Examples
 /// ```
 /// # use noteplay::midi::parse_chord;
 /// # use noteplay::soundfont::Timbre;
 /// # fn main() {
-/// let c_maj = parse_chord("C", 4, 1.0, Timbre::Default, 100).unwrap();
+/// let c_maj = parse_chord("C", 4, 1.0, Timbre::Default, 100).unwrap().get_normal_unchecked();
 /// assert_eq!(c_maj.notes.len(), 3);
-/// let cm7b5 = parse_chord("Cm7b5", 4, 1.0, Timbre::Default, 100).unwrap();
+/// let cm7b5 = parse_chord("Cm7b5", 4, 1.0, Timbre::Default, 100).unwrap().get_normal_unchecked();
 /// assert_eq!(cm7b5.notes.len(), 4);
 /// # }
 /// ```
