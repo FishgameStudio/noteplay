@@ -228,20 +228,20 @@ where
     Ok(midi.meta)
 }
 
-/// Merge two midi as one midi, the audio track will be stacked.
+/// Merge two midis as one midi, the audio track will be stacked.
 /// # Errors
 /// If the tempo or meta is not same.
 pub fn merge_two_midi(a: &Midi, b: &Midi) -> Result<Midi, Error> {
     #[inline]
-    fn error(msg: &str) -> Result<Midi, Error> {
+    fn error(msg: &str) -> Result<!, Error> {
         Err(Error::MergeMidi(msg.into()))
     }
 
     if a.tempo != b.tempo {
-        return error("tempos are different");
+        error("tempos are different")?;
     }
     if a.meta != b.meta {
-        return error("metadata are different");
+        error("metadata are different")?;
     }
 
     /// Convert delta event list -> (`absolute_beat`, `notes`)
@@ -249,8 +249,10 @@ pub fn merge_two_midi(a: &Midi, b: &Midi) -> Result<Midi, Error> {
         let mut out = Vec::new();
         let mut now = 0.0;
         for ev in events {
-            now += ev.delta_beat;
-            out.push((now, ev.notes.clone()));
+            if let Event::Normal { notes, delta_beat } = ev {
+                now += delta_beat;
+                out.push((now, notes.clone()));
+            }
         }
         out
     }
@@ -295,7 +297,7 @@ pub fn merge_two_midi(a: &Midi, b: &Midi) -> Result<Midi, Error> {
     let mut prev = 0.0;
     for (t, notes) in merged_abs {
         let delta = t - prev;
-        events.push(Event {
+        events.push(Event::Normal {
             delta_beat: delta,
             notes,
         });
@@ -317,70 +319,103 @@ mod tests {
     #[test]
     fn test_parse_chord_basic() {
         // C major
-        let ev = parse_chord("C", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("C", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal()
+            .unwrap();
         assert_eq!(ev.notes.len(), 3);
 
         // Cm minor
-        let ev = parse_chord("Cm", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Cm", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 3);
 
         // Csus4
-        let ev = parse_chord("Csus4", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Csus4", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 3);
 
         // Csus2
-        let ev = parse_chord("Csus2", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Csus2", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 3);
 
         // Cmaj7
-        let ev = parse_chord("Cmaj7", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Cmaj7", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
 
         // Cm7b5
-        let ev = parse_chord("Cm7b5", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Cm7b5", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
 
         // C7
-        let ev = parse_chord("C7", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("C7", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
 
         // Cadd9
-        let ev = parse_chord("Cadd9", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Cadd9", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
 
         // Cdim
-        let ev = parse_chord("Cdim", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Cdim", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 3);
 
         // Caug
-        let ev = parse_chord("Caug", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Caug", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 3);
 
         // C#maj7 sharp root
-        let ev = parse_chord("C#maj7", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("C#maj7", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
 
         // CBmaj7 flat root
-        let ev = parse_chord("CBmaj7", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("CBmaj7", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
     }
 
     #[test]
     fn test_parse_chord_extended() {
         // Cmaj9
-        let ev = parse_chord("Cmaj9", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("Cmaj9", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 5);
 
         // C7b9
-        let ev = parse_chord("C7b9", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("C7b9", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 5);
 
         // C7#9
-        let ev = parse_chord("C7#9", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("C7#9", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 5);
 
         // C13
-        let ev = parse_chord("C13", 4, 1.0, Timbre::Default, 90).unwrap();
+        let ev = parse_chord("C13", 4, 1.0, Timbre::Default, 90)
+            .unwrap()
+            .get_normal_unchecked();
         assert_eq!(ev.notes.len(), 4);
     }
 
@@ -429,14 +464,14 @@ mod tests {
 
         let a = midi_test(
             120.0,
-            vec![Event {
+            vec![Event::Normal {
                 delta_beat: 1.0,
                 notes: vec![note1],
             }],
         );
         let b = midi_test(
             120.0,
-            vec![Event {
+            vec![Event::Normal {
                 delta_beat: 1.0,
                 notes: vec![note2],
             }],
@@ -444,7 +479,7 @@ mod tests {
 
         let out = merge_two_midi(&a, &b).unwrap();
         assert_eq!(out.events.len(), 1);
-        let ev = &out.events[0];
+        let ev = &out.events[0].get_normal_unchecked();
         assert!((ev.delta_beat - 1.0).abs() < 1e-5);
         assert_eq!(ev.notes.len(), 2);
     }
@@ -458,11 +493,11 @@ mod tests {
         let a = midi_test(
             120.0,
             vec![
-                Event {
+                Event::Normal {
                     delta_beat: 1.0,
                     notes: vec![n1],
                 },
-                Event {
+                Event::Normal {
                     delta_beat: 1.0,
                     notes: vec![n2],
                 },
@@ -470,7 +505,7 @@ mod tests {
         );
         let b = midi_test(
             120.0,
-            vec![Event {
+            vec![Event::Normal {
                 delta_beat: 1.5,
                 notes: vec![n3],
             }],
@@ -486,7 +521,7 @@ mod tests {
         let n = note_test(440.0);
         let a = midi_test(
             120.0,
-            vec![Event {
+            vec![Event::Normal {
                 delta_beat: 2.0,
                 notes: vec![n],
             }],
@@ -495,7 +530,7 @@ mod tests {
 
         let out = merge_two_midi(&a, &b).unwrap();
         assert_eq!(out.events.len(), 1);
-        assert!((out.events[0].delta_beat - 2.0).abs() < 1e-5);
+        assert!((out.events[0].get_normal_unchecked().delta_beat - 2.0).abs() < 1e-5);
     }
 
     #[test]

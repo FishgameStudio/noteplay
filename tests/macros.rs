@@ -4,9 +4,9 @@ use noteplay::{event, event_const, midi, midi_const};
 
 #[test]
 fn event_macro_creates_expected_runtime_event() {
-    let ev = event!(1.5, [("C4", 0.5), ("E4", 0.5)]);
-    let ev_with_timbre = event!(0.5, [("G4", 0.5, Cello)]);
-    let ev_with_velocity = event!(0.25, [("B4", 0.5, Cello, 64)]);
+    let ev = event!(1.5, [("C4", 0.5), ("E4", 0.5)]).get_normal_unchecked();
+    let ev_with_timbre = event!(0.5, [("G4", 0.5, Cello)]).get_normal_unchecked();
+    let ev_with_velocity = event!(0.25, [("B4", 0.5, Cello, 64)]).get_normal_unchecked();
 
     assert_eq!(ev.delta_beat, 1.5);
     assert_eq!(ev.notes.len(), 2);
@@ -43,8 +43,8 @@ fn midi_macro_sets_tempo_and_default_metadata() {
 
 #[test]
 fn const_macros_build_equivalent_runtime_data() {
-    let raw_event = event_const!(1.0, [("C4", 0.5), ("G4", 0.5)]);
-    let raw_timbred_event = event_const!(0.5, [("E4", 0.5, Cello)]);
+    let raw_event = event_const!(1.0, [("C4", 0.5), ("G4", 0.5)]).get_normal_unchecked();
+    let raw_timbred_event = event_const!(0.5, [("E4", 0.5, Cello)]).get_normal_unchecked();
     let runtime_event = raw_event.to_runtime();
 
     assert_eq!(runtime_event.delta_beat, 1.0);
@@ -54,7 +54,12 @@ fn const_macros_build_equivalent_runtime_data() {
     let runtime_timbred_event = raw_timbred_event.to_runtime();
     assert_eq!(runtime_timbred_event.notes[0].2, Timbre::Cello);
 
-    let raw_song = midi_const!("Const Song", 90.0, raw_event, raw_timbred_event);
+    let raw_song = midi_const!(
+        "Const Song",
+        90.0,
+        raw_event.to_event(),
+        raw_timbred_event.to_event()
+    );
     assert_eq!(raw_song.tempo, 90.0);
     assert_eq!(
         raw_song.meta.song_name.unwrap().trim_end_null(),

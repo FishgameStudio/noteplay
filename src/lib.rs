@@ -5,7 +5,6 @@
 #![deny(non_upper_case_globals)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(unused_must_use)]
-#![deny(clippy::unreachable)]
 #![warn(clippy::float_cmp)]
 #![warn(clippy::if_not_else)]
 #![warn(clippy::needless_borrow)]
@@ -31,6 +30,7 @@
 #![allow(clippy::redundant_pub_crate)]
 
 //! # Noteplay: Note & Midi Player for Rust
+//!
 //! **Noteplay** is a Rust crate for turning
 //! musical notes and simple arrangements into
 //! sound. It can play individual notes through
@@ -40,6 +40,8 @@
 //! intended as a straightforward starting point
 //! for adding musical playback to Rust projects -
 //! not as a full digital audio workstation.
+//!
+//! View the documentation [here](https://docs.rs/noteplay/latest/noteplay).
 
 #[doc = include_str!("../README.md")]
 #[cfg(doctest)]
@@ -124,6 +126,9 @@ pub enum Error {
     /// Failed to merge two midis.
     #[error("Failed to merge two midis: {0}")]
     MergeMidi(String),
+    /// Assertion that not a normal event failed.
+    #[error("Assertion that not a normal event failed")]
+    NotNormalEvent,
 }
 
 #[cfg(test)]

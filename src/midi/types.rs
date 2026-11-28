@@ -1,5 +1,6 @@
 //! Main definition of the structure.
 
+use crate::Error;
 use crate::midi::fixed_string::FixedString;
 use crate::{
     core::types::{Frequency, Semitones, Tempo},
@@ -14,16 +15,16 @@ pub type Note = (Frequency, f32, Timbre, i32);
 #[derive(Debug, Clone, Copy)]
 pub struct RawNote(pub Semitones, pub f32, pub Timbre, pub i32);
 
-/// A storage of an event in a beat.
+/// A struct that stores fields in a normal event ([`Event::Normal`]).
 #[derive(Debug, PartialEq, Clone)]
-pub struct Event {
+pub struct NormalEvent {
     /// Notes to press in a beat.
     pub notes: Vec<Note>,
     /// How many beats have passed since the previous event.
     pub delta_beat: f32,
 }
-impl Event {
-    /// Create a new [`Event`] object.
+impl NormalEvent {
+    /// Create a new [`NormalEvent`] object.
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -31,7 +32,7 @@ impl Event {
             delta_beat: 0.0,
         }
     }
-    /// Create a new [`Event`] object with given `delta_beat`.
+    /// Create a new [`NormalEvent`] object with given `delta_beat`.
     #[must_use]
     pub const fn with_delta_beat(delta_beat: f32) -> Self {
         Self {
@@ -39,13 +40,92 @@ impl Event {
             delta_beat,
         }
     }
-    /// Create a new [`Event`] object with given `notes`.
+    /// Create a new [`NormalEvent`] object with given `notes`.
     #[must_use]
     pub const fn with_notes(notes: Vec<Note>) -> Self {
         Self {
             notes,
             delta_beat: 0.0,
         }
+    }
+    /// Returns an [`Event`] that is an [`Event::Normal`] enumeration.
+    /// Consumes `self`.
+    #[must_use]
+    pub fn to_event(self) -> Event {
+        Event::Normal {
+            notes: self.notes,
+            delta_beat: self.delta_beat,
+        }
+    }
+}
+impl Default for NormalEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// A storage of an event in a beat.
+#[derive(Debug, PartialEq, Clone)]
+#[repr(u8)]
+pub enum Event {
+    /// Normal event.
+    // 0
+    Normal {
+        /// Notes to press in a beat.
+        notes: Vec<Note>,
+        /// How many beats have passed since the previous event.
+        delta_beat: f32,
+    },
+    /// Tempo change.
+    // 1
+    TempoChange {
+        /// The new tempo.
+        tempo: Tempo,
+    },
+}
+impl Event {
+    /// Create a new [`Event`] object.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self::Normal {
+            notes: vec![],
+            delta_beat: 0.0,
+        }
+    }
+    /// Create a new [`Event`] object with given `delta_beat`.
+    #[must_use]
+    pub const fn with_delta_beat(delta_beat: f32) -> Self {
+        Self::Normal {
+            notes: vec![],
+            delta_beat,
+        }
+    }
+    /// Create a new [`Event`] object with given `notes`.
+    #[must_use]
+    pub const fn with_notes(notes: Vec<Note>) -> Self {
+        Self::Normal {
+            notes,
+            delta_beat: 0.0,
+        }
+    }
+    /// Returns a [`NormalEvent`] (aka the [`Event::Normal`] enumeration) if it is,
+    /// or returns an [`Err`] value if not.
+    pub fn get_normal(&self) -> Result<NormalEvent, Error> {
+        if let Self::Normal { notes, delta_beat } = self {
+            Ok(NormalEvent {
+                notes: notes.clone(),
+                delta_beat: *delta_beat,
+            })
+        } else {
+            Err(Error::NotNormalEvent)
+        }
+    }
+    /// Returns a [`NormalEvent`] (aka the [`Event::Normal`] enumeration) if it is.
+    /// # Panics
+    /// If [`self`] is not [`Event::Normal`].
+    #[must_use]
+    pub fn get_normal_unchecked(&self) -> NormalEvent {
+        self.get_normal().unwrap()
     }
 }
 impl Default for Event {
@@ -133,8 +213,14 @@ impl Midi {
     pub fn transposed(mut self, offset: i32) -> Self {
         let factor = (offset as f32 / 12.0).exp2();
         for e in &mut self.events {
-            for note in &mut e.notes {
-                note.0.set_freq_unchecked(note.0.get_freq() * factor);
+            if let Event::Normal {
+                notes,
+                delta_beat: _,
+            } = e
+            {
+                for note in notes {
+                    note.0.set_freq_unchecked(note.0.get_freq() * factor);
+                }
             }
         }
         self
@@ -146,17 +232,15 @@ impl Default for Midi {
     }
 }
 
-/// Static read-only [`Event`] sequence definition, compatible with `const`.
-///
-/// Use [`EventRaw::to_runtime`] to convert to a [`Event`] object.
+/// A struct that stores fields in the [`RawEvent::Normal`].
 #[derive(Debug, Clone, Copy)]
-pub struct EventRaw<'a> {
-    /// Raw notes (semi offset + duration)
+pub struct NormalEventRaw<'a> {
+    /// Notes to press in a beat.
     pub notes: &'a [RawNote],
     /// How many beats have passed since the previous event.
     pub delta_beat: f32,
 }
-impl<'a> EventRaw<'a> {
+impl<'a> NormalEventRaw<'a> {
     /// Create a new [`EventRaw`] object.
     #[must_use]
     pub const fn new() -> Self {
@@ -165,19 +249,101 @@ impl<'a> EventRaw<'a> {
             delta_beat: 0.0,
         }
     }
-
-    /// Convert to a runtime type [`Event`].
-    /// Calculates frequency from semi offset using standard exp2.
+    /// Convert to a runtime type [`NormalEvent`].
     #[must_use]
-    pub fn to_runtime(self) -> Event {
+    pub fn to_runtime(self) -> NormalEvent {
         let notes: Vec<Note> = self
             .notes
             .iter()
             .map(|&RawNote(semi, dur, timbre, velocity)| (semi2freq(semi), dur, timbre, velocity))
             .collect();
-        Event {
+        NormalEvent {
             notes,
             delta_beat: self.delta_beat,
+        }
+    }
+
+    /// Returns an [`EventRaw`] that is an [`EventRaw::Normal`] enumeration.
+    /// Consumes `self`.
+    #[must_use]
+    pub const fn to_event(self) -> EventRaw<'a> {
+        EventRaw::Normal {
+            notes: self.notes,
+            delta_beat: self.delta_beat,
+        }
+    }
+}
+impl<'a> Default for NormalEventRaw<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Static read-only [`Event`] sequence definition, compatible with `const`.
+///
+/// Use [`EventRaw::to_runtime`] to convert to a [`Event`] object.
+#[derive(Debug, Clone, Copy)]
+pub enum EventRaw<'a> {
+    /// Normal event.
+    // 0
+    Normal {
+        /// Raw notes (semi offset + duration)
+        notes: &'a [RawNote],
+        /// How many beats have passed since the previous event.
+        delta_beat: f32,
+    },
+    /// Tempo changes.
+    // 1
+    TempoChange {
+        /// The new tempo.
+        tempo: Tempo,
+    },
+}
+impl<'a> EventRaw<'a> {
+    /// Create a new [`EventRaw`] object.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self::Normal {
+            notes: &[],
+            delta_beat: 0.0,
+        }
+    }
+
+    /// Returns a [`NormalEventRaw`] (aka the [`EventRaw::Normal`] enumeration) if it is,
+    /// or returns an [`Err`] value if not.
+    pub const fn get_normal(&'a self) -> Result<NormalEventRaw<'a>, Error> {
+        if let Self::Normal { notes, delta_beat } = self {
+            Ok(NormalEventRaw {
+                notes,
+                delta_beat: *delta_beat,
+            })
+        } else {
+            Err(Error::NotNormalEvent)
+        }
+    }
+    /// Returns a [`NormalEventRaw`] (aka the [`EventRaw::Normal`] enumeration) if it is.
+    /// # Panics
+    /// If `self` is not [`EventRaw::Normal`].
+    #[must_use]
+    pub fn get_normal_unchecked(&'a self) -> NormalEventRaw<'a> {
+        self.get_normal().unwrap()
+    }
+
+    /// Convert to a runtime type [`Event`].
+    #[must_use]
+    pub fn to_runtime(self) -> Event {
+        if let Self::Normal { notes, delta_beat } = self {
+            let notes: Vec<Note> = notes
+                .iter()
+                .map(|&RawNote(semi, dur, timbre, velocity)| {
+                    (semi2freq(semi), dur, timbre, velocity)
+                })
+                .collect();
+            Event::Normal { notes, delta_beat }
+        } else if let Self::TempoChange { tempo } = self {
+            Event::TempoChange { tempo }
+        } else {
+            unreachable!()
         }
     }
 }
@@ -236,7 +402,7 @@ pub fn semi2freq(semi: i32) -> Frequency {
 pub type Bytes = Vec<u8>;
 
 /// Version.
-pub const VERSION: u16 = 0x0003;
+pub const VERSION: u16 = 0x0004;
 
 /// Magic number.
 ///

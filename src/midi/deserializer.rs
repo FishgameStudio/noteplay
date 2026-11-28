@@ -15,7 +15,7 @@ use std::io::{Cursor, Read};
 /// If the format is invalid.
 pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
     #[inline]
-    fn error(msg: &str) -> Result<Midi, Error> {
+    fn error(msg: &str) -> Result<!, Error> {
         Err(Error::InvalidData(msg.to_string()))
     }
 
@@ -62,36 +62,57 @@ pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
 
     let mut events = Vec::with_capacity(event_count as usize);
     for _ in 0..event_count {
-        let mut delta_buf = [0u8; 4];
-        r.read_exact(&mut delta_buf)?;
-        let delta_beat = f32::from_le_bytes(delta_buf);
+        let mut event_type_buf = [0u8; 1];
+        r.read_exact(&mut event_type_buf)?;
+        let event_type = u8::from_le_bytes(event_type_buf);
+        match event_type {
+            0 => {
+                // Normal event
+                let mut delta_buf = [0u8; 4];
+                r.read_exact(&mut delta_buf)?;
+                let delta_beat = f32::from_le_bytes(delta_buf);
 
-        let mut note_cnt_buf = [0u8; 4];
-        r.read_exact(&mut note_cnt_buf)?;
-        let note_count = u32::from_le_bytes(note_cnt_buf);
+                let mut note_cnt_buf = [0u8; 4];
+                r.read_exact(&mut note_cnt_buf)?;
+                let note_count = u32::from_le_bytes(note_cnt_buf);
 
-        let mut notes: Vec<Note> = Vec::with_capacity(note_count as usize);
-        for _ in 0..note_count {
-            let mut freq_buf = [0u8; 4];
-            r.read_exact(&mut freq_buf)?;
-            let freq = f32::from_le_bytes(freq_buf);
+                let mut notes: Vec<Note> = Vec::with_capacity(note_count as usize);
+                for _ in 0..note_count {
+                    let mut freq_buf = [0u8; 4];
+                    r.read_exact(&mut freq_buf)?;
+                    let freq = f32::from_le_bytes(freq_buf);
 
-            let mut dur_buf = [0u8; 4];
-            r.read_exact(&mut dur_buf)?;
-            let dur = f32::from_le_bytes(dur_buf);
+                    let mut dur_buf = [0u8; 4];
+                    r.read_exact(&mut dur_buf)?;
+                    let dur = f32::from_le_bytes(dur_buf);
 
-            let mut timbre_buf = [0u8; 4];
-            r.read_exact(&mut timbre_buf)?;
-            let t = i32::from_le_bytes(timbre_buf);
-            let timbre = Timbre::try_from(t).map_err(|_| Error::UnknownTimbreNum(t))?;
+                    let mut timbre_buf = [0u8; 4];
+                    r.read_exact(&mut timbre_buf)?;
+                    let t = i32::from_le_bytes(timbre_buf);
+                    let timbre = Timbre::try_from(t).map_err(|_| Error::UnknownTimbreNum(t))?;
 
-            let mut velocity_buf = [0u8; 4];
-            r.read_exact(&mut velocity_buf)?;
-            let velocity = i32::from_le_bytes(velocity_buf);
+                    let mut velocity_buf = [0u8; 4];
+                    r.read_exact(&mut velocity_buf)?;
+                    let velocity = i32::from_le_bytes(velocity_buf);
 
-            notes.push((Frequency::new(freq)?, dur, timbre, velocity));
+                    notes.push((Frequency::new(freq)?, dur, timbre, velocity));
+                }
+                events.push(Event::Normal { notes, delta_beat });
+            }
+            1 => {
+                // Tempo changes
+                let mut tempo_buf = [0u8; 4];
+                r.read_exact(&mut tempo_buf)?;
+                let tempo = f32::from_le_bytes(tempo_buf);
+
+                events.push(Event::TempoChange {
+                    tempo: Tempo::new(tempo)?,
+                });
+            }
+            other => error(&format!(
+                "Invalid enumeration number of event type: {other}"
+            ))?,
         }
-        events.push(Event { notes, delta_beat });
     }
 
     Ok(Midi {

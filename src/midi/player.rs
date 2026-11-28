@@ -14,13 +14,19 @@ fn remaining_playback_beats(events: &[Event]) -> f32 {
     let mut latest_note_end = 0.0_f32;
 
     for event in events {
-        elapsed_beats += event.delta_beat;
-        for (_, duration, _, _) in &event.notes {
-            latest_note_end =
-                latest_note_end.max(elapsed_beats + articulated_duration_beats(*duration));
+        match event {
+            Event::Normal { notes, delta_beat } => {
+                elapsed_beats += delta_beat;
+                for (_, duration, _, _) in notes {
+                    let end = elapsed_beats + articulated_duration_beats(*duration);
+                    latest_note_end = latest_note_end.max(end);
+                }
+            }
+            Event::TempoChange { .. } => {
+                // Tempo change doesn't yield notes.
+            }
         }
     }
-
     (latest_note_end - elapsed_beats).max(0.0)
 }
 
@@ -37,28 +43,35 @@ impl MidiPlayer {
     /// # Panics
     /// If the [`Midi`] is invalid or the [`NotePlayer`] didn't be initialized soundfont.
     pub fn play(midi: &Midi, np: &mut NotePlayer) {
-        // Validate
         assert!(midi.tempo.get_tempo() > 20.0, "Tempo too low");
         assert!(np.synth.is_ready());
 
-        let sec_per_beat = 60.0 / midi.tempo.get_tempo();
+        let mut sec_per_beat = 60.0 / midi.tempo.get_tempo();
 
         for event in &midi.events {
-            // wait delta beats
-            let wait_sec = Duration::from_secs_f32(event.delta_beat * sec_per_beat);
-            NotePlayer::rest(wait_sec);
+            match event {
+                Event::Normal { notes, delta_beat } => {
+                    // wait delta beats
+                    let wait_sec = Duration::from_secs_f32(delta_beat * sec_per_beat);
+                    NotePlayer::rest(wait_sec);
 
-            // spawn all notes in this event (async together)
-            for (freq, dur_beat, timbre, velocity) in &event.notes {
-                let dur_sec =
-                    Duration::from_secs_f32(articulated_duration_beats(*dur_beat) * sec_per_beat);
-                np.set_timbre(*timbre);
-                assert!(
-                    0 <= *velocity && *velocity <= 127,
-                    "'{}' is not a valid velocity",
-                    *velocity
-                );
-                np.play_freq_async(*freq, dur_sec, *velocity); // Temporary 90
+                    for (freq, dur_beat, timbre, velocity) in notes {
+                        let dur_sec = Duration::from_secs_f32(
+                            articulated_duration_beats(*dur_beat) * sec_per_beat,
+                        );
+                        np.set_timbre(*timbre);
+                        assert!(
+                            0 <= *velocity && *velocity <= 127,
+                            "'{}' is not a valid velocity",
+                            *velocity
+                        );
+                        np.play_freq_async(*freq, dur_sec, *velocity);
+                    }
+                }
+                Event::TempoChange { tempo } => {
+                    // Update global SPB
+                    sec_per_beat = 60.0 / tempo.get_tempo();
+                }
             }
         }
 
@@ -95,11 +108,11 @@ mod tests {
     #[test]
     fn playback_wait_includes_notes_that_outlast_later_events() {
         let events = [
-            Event {
+            Event::Normal {
                 notes: vec![(Frequency::new_unchecked(440.0), 4.0, Timbre::Default, 90)],
                 delta_beat: 0.0,
             },
-            Event {
+            Event::Normal {
                 notes: vec![(Frequency::new_unchecked(880.0), 0.5, Timbre::Default, 90)],
                 delta_beat: 1.0,
             },

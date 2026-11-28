@@ -10,12 +10,12 @@ pub(crate) mod utils;
 
 pub use deserializer::deserialize;
 pub use fixed_string::{FixedString, FixedStringParseError};
-pub use macros::{event, event_const, midi, midi_const, repeat};
+pub use macros::{event, event_const, midi, midi_const, repeat, tempo_change, tempo_change_const};
 pub use player::MidiPlayer;
 pub use serializer::serialize;
 pub use types::{
-    AUTHOR_LEN, COPYRIGHT_LEN, DEFAULT_META, Event, EventRaw, MAGIC, Midi, MidiMeta, MidiRaw, Note,
-    RawNote, SONG_NAME_LEN, VERSION,
+    AUTHOR_LEN, COPYRIGHT_LEN, DEFAULT_META, Event, EventRaw, MAGIC, Midi, MidiMeta, MidiRaw,
+    NormalEvent, NormalEventRaw, Note, RawNote, SONG_NAME_LEN, VERSION,
 };
 pub use utils::*;
 
@@ -35,13 +35,23 @@ mod tests {
         );
         assert_eq!(expected.events.len(), actual.events.len());
         for (expected_event, actual_event) in expected.events.iter().zip(&actual.events) {
-            assert_eq!(
-                expected_event.delta_beat.to_bits(),
-                actual_event.delta_beat.to_bits()
-            );
-            assert_eq!(expected_event.notes.len(), actual_event.notes.len());
-            for (expected_note, actual_note) in expected_event.notes.iter().zip(&actual_event.notes)
-            {
+            let Event::Normal {
+                notes: e_notes,
+                delta_beat: e_delta_beat,
+            } = expected_event
+            else {
+                panic!()
+            };
+            let Event::Normal {
+                notes: a_notes,
+                delta_beat: a_delta_beat,
+            } = actual_event
+            else {
+                panic!()
+            };
+            assert_eq!(e_delta_beat.to_bits(), a_delta_beat.to_bits());
+            assert_eq!(e_notes.len(), a_notes.len());
+            for (expected_note, actual_note) in e_notes.iter().zip(a_notes) {
                 assert_eq!(
                     expected_note.0.get_freq().to_bits(),
                     actual_note.0.get_freq().to_bits()
@@ -69,18 +79,18 @@ mod tests {
                 author: None,
             },
             events: vec![
-                Event {
+                Event::Normal {
                     notes: vec![],
                     delta_beat: 0.0,
                 },
-                Event {
+                Event::Normal {
                     notes: vec![
                         (Frequency::new_unchecked(440.0), 0.25, Timbre::Default, 90),
                         (Frequency::new_unchecked(261.625), 1.5, Timbre::Default, 90),
                     ],
                     delta_beat: 0.5,
                 },
-                Event {
+                Event::Normal {
                     notes: vec![(Frequency::new_unchecked(880.0), 0.125, Timbre::Default, 90)],
                     delta_beat: 2.0,
                 },
@@ -141,18 +151,18 @@ mod tests {
                     author: None,
                 },
                 events: vec![
-                    Event {
+                    Event::Normal {
                         notes: vec![],
                         delta_beat: 0.0,
                     },
-                    Event {
+                    Event::Normal {
                         notes: vec![
                             (Frequency::new_unchecked(440.0), 0.25, Timbre::Default, 90),
                             (Frequency::new_unchecked(261.625), 1.5, Timbre::Default, 90),
                         ],
                         delta_beat: 0.5,
                     },
-                    Event {
+                    Event::Normal {
                         notes: vec![(Frequency::new_unchecked(880.0), 0.125, Timbre::Default, 90)],
                         delta_beat: 2.0,
                     },

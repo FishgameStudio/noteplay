@@ -13,7 +13,7 @@ fn midi_serialize_deserialize_roundtrip() {
             copyright: None,
             author: None,
         },
-        events: vec![Event {
+        events: vec![Event::Normal {
             delta_beat: 0.0,
             notes: vec![(Frequency::new_unchecked(440.0), 0.5, Timbre::Default, 90)],
         }],
