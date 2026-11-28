@@ -97,10 +97,10 @@ macro_rules! midi {
             }
         }
     }};
-    ($song_name:literal, $copyright:literal, $author:literal, $tempo:expr,$($event:expr),*$(,)?) => {
-        const _a: &str = $song_name;
-        const _b: &str = $copyright;
-        const _c: &str = $author;
+    (Name = $song_name:literal, Copyright = $copyright:expr, Author = $author:expr, $tempo:expr,$($event:expr),*$(,)?) => {{
+        const _: &str = $song_name;
+        const _: &str = $copyright;
+        const _: &str = $author;
 
         $crate::midi::Midi {
             tempo: $crate::core::Tempo::new_unchecked($tempo),
@@ -113,7 +113,7 @@ macro_rules! midi {
                 copyright: Some($crate::midi::FixedString::<{$crate::midi::COPYRIGHT_LEN}>::from_str_const($copyright)),
             }
         }
-    }
+    }}
 }
 
 /// Create a new [`EventRaw`](crate::midi::EventRaw) object with the [`event_const`] macro.
@@ -166,7 +166,7 @@ macro_rules! event_const {
 #[macro_export]
 macro_rules! midi_const {
     () => {{ $crate::midi::MidiRaw::new() }};
-    ($song_name:literal, $tempo:expr,$($event:expr),*$(,)?) => {{
+    ($song_name:literal, $tempo:literal, $($event:expr),*$(,)?) => {{
         const _: &str = $song_name;
 
         $crate::midi::MidiRaw {
@@ -180,8 +180,10 @@ macro_rules! midi_const {
             }
         }
     }};
-    ($song_name:literal, $copyright:literal, $author:literal, $tempo:expr,$($event:expr),*$(,)?) => {{
+    (Name = $song_name:literal, Copyright = $copyright:literal, Author = $author:literal, $tempo:literal, $($event:expr),*$(,)?) => {{
         const _: &str = $song_name;
+        const _1: &str = $copyright;
+        const _2: &str = $author;
 
         $crate::midi::MidiRaw {
             tempo: $tempo,
