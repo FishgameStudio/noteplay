@@ -20,9 +20,9 @@ macro_rules! event {
     ($delta:expr) => {{ $crate::midi::Event::with_delta_beat($delta) }};
     ($delta:expr,[$(($name:literal, $dur:expr)),*$(,)?]) => {{
         const __CHECK: &[&str] = &[ $( $name ),* ];
-        let _ = __CHECK;
+        let _ = __CHECK; // dismiss unused warn
 
-        $crate::midi::Event {
+        $crate::midi::Event::Normal {
             delta_beat: $delta,
             notes: vec![$(
                 ($crate::core::note2freq($name),
@@ -32,9 +32,9 @@ macro_rules! event {
     }};
     ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident)),*$(,)?]) => {{
         const __CHECK: &[&str] = &[ $( $name ),* ];
-        let _ = __CHECK;
+        let _ = __CHECK; // dismiss unused warn
 
-        $crate::midi::Event {
+        $crate::midi::Event::Normal {
             delta_beat: $delta,
             notes: vec![$(
                 ($crate::core::note2freq($name),
@@ -44,9 +44,9 @@ macro_rules! event {
     }};
     ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident, $velocity:expr)),*$(,)?]) => {{
         const __CHECK: &[&str] = &[ $( $name ),* ];
-        let _ = __CHECK;
+        let _ = __CHECK; // dismiss unused warn
 
-        $crate::midi::Event {
+        $crate::midi::Event::Normal {
             delta_beat: $delta,
             notes: vec![$(
                 ($crate::core::note2freq($name),
@@ -54,6 +54,14 @@ macro_rules! event {
             ),*],
         }
     }};
+}
+/// Update the tempo of a song with the [`tempo_change`] macro.
+#[macro_export]
+macro_rules! tempo_change {
+    ($tempo:expr) => {
+        const _: f32 = $tempo;
+        $crate::midi::Event::TempoChange { tempo: $tempo }
+    };
 }
 
 /// Create a new [`Midi`](crate::midi::Midi) object with the [`midi`] macro.
@@ -116,35 +124,38 @@ macro_rules! event_const {
     () => {{ $crate::midi::EventRaw::new() }};
     ($delta:expr,[$(($name:literal, $dur:expr)),*$(,)?]) => {{
         const __CHECK: &[&str] = &[ $( $name ),* ];
-        let _ = __CHECK;
+        let _ = __CHECK; // dismiss unused warn
+        const __NOTES: &[$crate::midi::RawNote] = &[$(
+            $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::BrightAcousticPiano, 100)
+        ),*];
 
-        $crate::midi::EventRaw {
+        $crate::midi::EventRaw::Normal {
             delta_beat: $delta,
-            notes: &[$(
-                $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::BrightAcousticPiano, 100)
-            ),*],
+            notes: __NOTES,
         }
     }};
     ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident)),*$(,)?]) => {{
         const __CHECK: &[&str] = &[ $( $name ),* ];
-        let _ = __CHECK;
+        let _ = __CHECK; // dismiss unused warn
+        const __NOTES: &[$crate::midi::RawNote] = &[$(
+            $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, 100)
+        ),*];
 
-        $crate::midi::EventRaw {
+        $crate::midi::EventRaw::Normal {
             delta_beat: $delta,
-            notes: &[$(
-                $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, 100)
-            ),*],
+            notes: __NOTES,
         }
     }};
     ($delta:expr,[$(($name:literal, $dur:expr, $timbre:ident, $velocity:expr)),*$(,)?]) => {{
         const __CHECK: &[&str] = &[ $( $name ),* ];
-        let _ = __CHECK;
+        let _ = __CHECK; // dismiss unused warn
+        const __NOTES: &[$crate::midi::RawNote] = &[$(
+            $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, $velocity)
+        ),*];
 
-        $crate::midi::EventRaw {
+        $crate::midi::EventRaw::Normal {
             delta_beat: $delta,
-            notes: &[$(
-                $crate::midi::RawNote($crate::core::note2semi($name), $dur, $crate::soundfont::Timbre::$timbre, $velocity)
-            ),*],
+            notes: __NOTES,
         }
     }};
 }
@@ -194,5 +205,13 @@ macro_rules! repeat {
         vec![$event; $repetitions]
     }};
 }
+/// Update the tempo of a song with the [`tempo_change_const`] macro.
+#[macro_export]
+macro_rules! tempo_change_const {
+    ($tempo:literal) => {
+        const _: f32 = $tempo;
+        $crate::midi::EventRaw::TempoChange { tempo: $tempo }
+    };
+}
 
-pub use {event, event_const, midi, midi_const, repeat};
+pub use {event, event_const, midi, midi_const, repeat, tempo_change, tempo_change_const};
