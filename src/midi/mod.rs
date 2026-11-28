@@ -112,10 +112,12 @@ mod tests {
         expected_bin.extend_from_slice(&[0u8; 32 * 4]);
 
         // Event 0
+        expected_bin.push(0); // Normal event type
         expected_bin.extend_from_slice(&0.0_f32.to_le_bytes());
         expected_bin.extend_from_slice(&0_u32.to_le_bytes());
 
         // Event 1
+        expected_bin.push(0); // Normal event type
         expected_bin.extend_from_slice(&0.5_f32.to_le_bytes());
         expected_bin.extend_from_slice(&2_u32.to_le_bytes());
         // Note 1: freq(f32), dur(f32), timbre(i32), velocity(i32)
@@ -131,6 +133,7 @@ mod tests {
         expected_bin.extend_from_slice(&90i32.to_le_bytes());
 
         // Event 2
+        expected_bin.push(0); // Normal event type
         expected_bin.extend_from_slice(&2.0_f32.to_le_bytes());
         expected_bin.extend_from_slice(&1_u32.to_le_bytes());
         // Note
