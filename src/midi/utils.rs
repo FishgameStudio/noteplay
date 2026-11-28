@@ -228,9 +228,19 @@ where
     Ok(midi.meta)
 }
 
-/// Merge two midis as one midi, the audio track will be stacked.
+/// Merge two midis as one midi, the audio tracks will be stacked.
 /// # Errors
 /// If the tempo or meta is not same.
+/// # Example
+/// ```
+/// # use noteplay::prelude::{merge_two_midi, Midi};
+/// # fn main() {
+/// # let track1 = Midi::new();
+/// # let track2 = Midi::new();
+/// // Merge two audio tracks.
+/// merge_two_midi(&track1, &track2).unwrap();
+/// # }
+/// ```
 pub fn merge_two_midi(a: &Midi, b: &Midi) -> Result<Midi, Error> {
     #[inline]
     fn error(msg: &str) -> Result<!, Error> {

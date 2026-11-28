@@ -42,6 +42,18 @@ impl MidiPlayer {
     ///
     /// # Panics
     /// If the [`Midi`] is invalid or the [`NotePlayer`] didn't be initialized soundfont.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::{NotePlayer, Tempo};
+    /// # use noteplay::midi::{Midi, MidiPlayer};
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut player = NotePlayer::new()?;
+    /// let song = Midi::with_tempo(Tempo::new_unchecked(120.0));
+    /// MidiPlayer::play(&song, &mut player);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn play(midi: &Midi, np: &mut NotePlayer) {
         assert!(midi.tempo.get_tempo() > 20.0, "Tempo too low");
         assert!(np.synth.is_ready());
@@ -87,6 +99,17 @@ impl MidiPlayer {
     ///
     /// # Panics
     /// If the Midi is invalid.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::{NotePlayer, Tempo};
+    /// # use noteplay::midi::{Midi, MidiPlayer};
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut player = NotePlayer::new()?;
+    /// let song = Midi::with_tempo(Tempo::new_unchecked(120.0));
+    /// MidiPlayer::loop_play(&song, &mut player);
+    /// # }
+    /// ```
     pub fn loop_play(midi: &Midi, np: &mut NotePlayer) -> ! {
         loop {
             Self::play(midi, np);

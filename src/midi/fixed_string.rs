@@ -50,6 +50,13 @@ impl<const N: usize> FixedString<N> {
         self.buf.len()
     }
     /// Returns if the `FixedString` is empty.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::FixedString;
+    /// assert!(FixedString::<0>::new().is_empty());
+    /// assert!(!FixedString::<1>::new().is_empty());
+    /// ```
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         N == 0
@@ -113,6 +120,13 @@ impl<const N: usize> FixedString<N> {
     }
     /// Returns the memory representation of this char array
     /// as a byte array in little-endian byte order.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::FixedString;
+    /// let value = "A".parse::<FixedString<1>>().unwrap();
+    /// assert_eq!(value.to_u32_le_bytes(), vec![65, 0, 0, 0]);
+    /// ```
     pub fn to_u32_le_bytes(&self) -> Vec<u8> {
         self.to_u32_array()
             .into_iter()
@@ -121,6 +135,13 @@ impl<const N: usize> FixedString<N> {
     }
     /// Creates a native endian fixed string from its
     /// representation as a byte array in little endian.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::FixedString;
+    /// let value = FixedString::<1>::from_le_bytes(&[65, 0, 0, 0]).unwrap();
+    /// assert_eq!(value.trim_end_null(), "A");
+    /// ```
     pub fn from_le_bytes(buf: &[u8]) -> Result<Self, FixedStringParseError> {
         if buf.len() != N * 4 {
             return Err(FixedStringParseError::ArrayLenMismatch(
@@ -137,11 +158,25 @@ impl<const N: usize> FixedString<N> {
         Ok(Self { buf: chars })
     }
     /// Returns if the `buf` field is all null (`'\0'`).
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::FixedString;
+    /// assert!(FixedString::<2>::new().is_all_null());
+    /// assert!(!FixedString::<2>::from_str_const("A").is_all_null());
+    /// ```
     #[must_use]
     pub fn is_all_null(&self) -> bool {
         self.buf.iter().all(|ch| *ch == '\0')
     }
     /// Remove trailing null ('\0').
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::FixedString;
+    /// let value = FixedString::<3>::from_str_const("A");
+    /// assert_eq!(value.trim_end_null(), "A");
+    /// ```
     #[must_use]
     pub fn trim_end_null(&self) -> String {
         let slice = self.buf.as_slice();
@@ -154,6 +189,13 @@ impl<const N: usize> FixedString<N> {
     }
     /// Const version: convert &str to `FixedString`, truncate / pad '\0'.
     /// Works in const context.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::FixedString;
+    /// const TITLE: FixedString<3> = FixedString::from_str_const("Title");
+    /// assert_eq!(TITLE.trim_end_null(), "Tit");
+    /// ```
     #[must_use]
     pub const fn from_str_const(s: &str) -> Self {
         let mut buf = ['\0'; N];
@@ -252,6 +294,8 @@ impl<const N: usize> std::str::FromStr for FixedString<N> {
 
 #[cfg(test)]
 mod tests {
+    use crate::midi::midi;
+
     use super::*;
     #[test]
     fn test_if_from_str_is_correct() {
@@ -274,5 +318,29 @@ mod tests {
         let data = ['a', 'b', 'c'];
         fstr.write(&data);
         assert_eq!(fstr.buf, data);
+    }
+    #[test]
+    fn test_fstr_to_utf8_string() {
+        let f = FixedString::<3> {
+            buf: ['a', 'b', 'c'],
+        };
+        assert_eq!(f.trim_end_null(), "abc");
+    }
+    #[test]
+    fn test_fstr_serialization_deserialization() {
+        const NAME: &str = "John Doe";
+        let midi = midi!(
+            Name = "Foo",
+            Copyright = "Copyright (c) 2026 Bar",
+            Author = NAME,
+            1.0,
+        );
+        assert_eq!(
+            FixedString::<{ 8 * 4 }>::from_le_bytes(&midi.meta.author.unwrap().to_u32_le_bytes())
+                .unwrap()
+                .trim_end_null()
+                .as_str(),
+            NAME
+        );
     }
 }

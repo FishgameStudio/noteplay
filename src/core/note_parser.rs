@@ -5,6 +5,14 @@ use crate::core::types::{Frequency, Semitones};
 /// Parse note and give a frequency.
 /// # Panics
 /// If the format of the note is invalid.
+///
+/// # Example
+/// ```
+/// # use noteplay::core::note2freq;
+/// # fn main() {
+/// assert_eq!(note2freq("A4").get_freq(), 440.0);
+/// # }
+/// ```
 #[must_use]
 pub fn note2freq(note: &str) -> Frequency {
     let note = note.trim().to_ascii_uppercase(); // All uppercase
@@ -48,6 +56,14 @@ pub fn note2freq(note: &str) -> Frequency {
 ///
 /// # Panics
 /// Invalid byte format, unknown base note, bad octave digit.
+///
+/// # Example
+/// ```
+/// # use noteplay::core::note2semi;
+/// # fn main() {
+/// assert_eq!(note2semi("C4"), -9);
+/// # }
+/// ```
 #[must_use]
 pub const fn note2semi(note: &str) -> Semitones {
     let b = note.as_bytes();
@@ -96,6 +112,13 @@ pub const fn note2semi(note: &str) -> Semitones {
 }
 
 /// Runtime: convert semi offset(A4=0) to exact frequency Hz
+///
+/// # Example
+/// ```
+/// # use noteplay::core::semi2freq;
+/// # fn main() {
+/// assert_eq!(semi2freq(0).get_freq(), 440.0);
+/// # }
 #[must_use]
 pub fn semi2freq(semi: Semitones) -> Frequency {
     Frequency::new_unchecked(440.0 * (semi as f32 / 12.0).exp2())

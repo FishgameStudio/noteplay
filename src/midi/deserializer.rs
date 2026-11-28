@@ -13,16 +13,26 @@ use std::io::{Cursor, Read};
 ///
 /// # Errors
 /// If the format is invalid.
+///
+/// # Example
+/// ```
+/// # use noteplay::midi::deserialize;
+/// # fn main() {
+/// let bytes = Vec::new();
+/// assert!(deserialize(bytes).is_err());
+/// # }
+/// ```
 pub fn deserialize(bin: Bytes) -> Result<Midi, Error> {
+    if bin.len() < HEADER_LEN {
+        error("Binary too short")?;
+    }
+
     #[inline]
     fn error(msg: &str) -> Result<!, Error> {
         Err(Error::InvalidData(msg.to_string()))
     }
 
     let mut r = Cursor::new(&bin);
-    if bin.len() < HEADER_LEN {
-        error("Binary too short")?;
-    }
     // Magic number
     let mut magic = [0u8; 4];
     r.read_exact(&mut magic)?;

@@ -40,9 +40,13 @@ noteplay = { features = ["full"] }
 use noteplay::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut np = NotePlayer::new()?;
-    np.set_soundfont_from_bytes(TIMGM6MB)?;
-    MidiPlayer::play(&BIRTHDAY_SONG.to_runtime(), &mut np);
+    let song = midi!(
+        "Example",
+        120.0,
+        event!(0.0, [("C4", 1.0), ("E4", 1.0), ("G4", 1.0)])
+    );
+    let bytes = serialize(&song);
+    let _loaded = deserialize(bytes)?;
     Ok(())
 }
 ```

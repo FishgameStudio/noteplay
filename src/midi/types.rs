@@ -25,6 +25,13 @@ pub struct NormalEvent {
 }
 impl NormalEvent {
     /// Create a new [`NormalEvent`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::NormalEvent;
+    /// let event = NormalEvent::new();
+    /// assert!(event.notes.is_empty());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -33,6 +40,13 @@ impl NormalEvent {
         }
     }
     /// Create a new [`NormalEvent`] object with given `delta_beat`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::NormalEvent;
+    /// let event = NormalEvent::with_delta_beat(0.5);
+    /// assert_eq!(event.delta_beat, 0.5);
+    /// ```
     #[must_use]
     pub const fn with_delta_beat(delta_beat: f32) -> Self {
         Self {
@@ -41,6 +55,17 @@ impl NormalEvent {
         }
     }
     /// Create a new [`NormalEvent`] object with given `notes`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::core::Frequency;
+    /// # use noteplay::midi::NormalEvent;
+    /// # use noteplay::soundfont::Timbre;
+    /// let event = NormalEvent::with_notes(vec![
+    ///     (Frequency::new_unchecked(440.0), 1.0, Timbre::Default, 90)
+    /// ]);
+    /// assert_eq!(event.notes.len(), 1);
+    /// ```
     #[must_use]
     pub const fn with_notes(notes: Vec<Note>) -> Self {
         Self {
@@ -50,6 +75,13 @@ impl NormalEvent {
     }
     /// Returns an [`Event`] that is an [`Event::Normal`] enumeration.
     /// Consumes `self`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::NormalEvent;
+    /// let event = NormalEvent::new().to_event();
+    /// assert!(event.get_normal().is_ok());
+    /// ```
     #[must_use]
     pub fn to_event(self) -> Event {
         Event::Normal {
@@ -85,6 +117,12 @@ pub enum Event {
 }
 impl Event {
     /// Create a new [`Event`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::Event;
+    /// assert!(Event::new().get_normal().is_ok());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self::Normal {
@@ -93,6 +131,13 @@ impl Event {
         }
     }
     /// Create a new [`Event`] object with given `delta_beat`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::Event;
+    /// let event = Event::with_delta_beat(0.5).get_normal().unwrap();
+    /// assert_eq!(event.delta_beat, 0.5);
+    /// ```
     #[must_use]
     pub const fn with_delta_beat(delta_beat: f32) -> Self {
         Self::Normal {
@@ -101,6 +146,17 @@ impl Event {
         }
     }
     /// Create a new [`Event`] object with given `notes`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::core::Frequency;
+    /// # use noteplay::midi::Event;
+    /// # use noteplay::soundfont::Timbre;
+    /// let event = Event::with_notes(vec![
+    ///     (Frequency::new_unchecked(440.0), 1.0, Timbre::Default, 90)
+    /// ]);
+    /// assert_eq!(event.get_normal().unwrap().notes.len(), 1);
+    /// ```
     #[must_use]
     pub const fn with_notes(notes: Vec<Note>) -> Self {
         Self::Normal {
@@ -110,6 +166,12 @@ impl Event {
     }
     /// Returns a [`NormalEvent`] (aka the [`Event::Normal`] enumeration) if it is,
     /// or returns an [`Err`] value if not.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::Event;
+    /// assert!(Event::new().get_normal().is_ok());
+    /// ```
     pub fn get_normal(&self) -> Result<NormalEvent, Error> {
         if let Self::Normal { notes, delta_beat } = self {
             Ok(NormalEvent {
@@ -123,6 +185,13 @@ impl Event {
     /// Returns a [`NormalEvent`] (aka the [`Event::Normal`] enumeration) if it is.
     /// # Panics
     /// If `self` is not [`Event::Normal`].
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::Event;
+    /// let normal = Event::new().get_normal_unchecked();
+    /// assert!(normal.notes.is_empty());
+    /// ```
     #[must_use]
     pub fn get_normal_unchecked(&self) -> NormalEvent {
         self.get_normal().unwrap()
@@ -146,6 +215,13 @@ pub struct MidiMeta {
 }
 impl MidiMeta {
     /// Create a new [`MidiMeta`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::MidiMeta;
+    /// let meta = MidiMeta::new();
+    /// assert!(meta.song_name.is_none());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -173,6 +249,12 @@ pub struct Midi {
 }
 impl Midi {
     /// Create a new [`Midi`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::Midi;
+    /// assert!(Midi::new().events.is_empty());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -182,6 +264,14 @@ impl Midi {
         }
     }
     /// Create a new [`Midi`] object with given `tempo`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::core::Tempo;
+    /// # use noteplay::midi::Midi;
+    /// let midi = Midi::with_tempo(Tempo::new_unchecked(120.0));
+    /// assert_eq!(midi.tempo.get_tempo(), 120.0);
+    /// ```
     #[must_use]
     pub const fn with_tempo(tempo: Tempo) -> Self {
         Self {
@@ -191,6 +281,13 @@ impl Midi {
         }
     }
     /// Create a new [`Midi`] object with given `events`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::{Event, Midi};
+    /// let midi = Midi::with_events(vec![Event::new()]);
+    /// assert_eq!(midi.events.len(), 1);
+    /// ```
     #[must_use]
     pub const fn with_events(events: Vec<Event>) -> Self {
         Self {
@@ -200,6 +297,13 @@ impl Midi {
         }
     }
     /// Create a new [`Midi`] object with given `meta`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::{Midi, MidiMeta};
+    /// let midi = Midi::with_meta(MidiMeta::new());
+    /// assert!(midi.meta.song_name.is_none());
+    /// ```
     #[must_use]
     pub const fn with_meta(meta: MidiMeta) -> Self {
         Self {
@@ -209,6 +313,23 @@ impl Midi {
         }
     }
     /// Transposition: take self, return a new sequence with all notes shifted by semitone offset.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::core::Frequency;
+    /// # use noteplay::midi::{Event, Midi};
+    /// # use noteplay::soundfont::Timbre;
+    /// let midi = Midi {
+    ///     events: vec![Event::Normal {
+    ///         notes: vec![(Frequency::new_unchecked(440.0), 1.0, Timbre::Default, 90)],
+    ///         delta_beat: 0.0,
+    ///     }],
+    ///     ..Midi::new()
+    /// };
+    /// let raised = midi.transposed(12);
+    /// let note = raised.events[0].get_normal_unchecked().notes[0].0.get_freq();
+    /// assert!((note - 880.0).abs() < 0.001);
+    /// ```
     #[must_use]
     pub fn transposed(mut self, offset: i32) -> Self {
         let factor = (offset as f32 / 12.0).exp2();
@@ -242,6 +363,12 @@ pub struct NormalEventRaw<'a> {
 }
 impl<'a> NormalEventRaw<'a> {
     /// Create a new [`EventRaw`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::NormalEventRaw;
+    /// assert!(NormalEventRaw::new().notes.is_empty());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -250,6 +377,12 @@ impl<'a> NormalEventRaw<'a> {
         }
     }
     /// Convert to a runtime type [`NormalEvent`].
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::NormalEventRaw;
+    /// assert!(NormalEventRaw::new().to_runtime().notes.is_empty());
+    /// ```
     #[must_use]
     pub fn to_runtime(self) -> NormalEvent {
         let notes: Vec<Note> = self
@@ -265,6 +398,12 @@ impl<'a> NormalEventRaw<'a> {
 
     /// Returns an [`EventRaw`] that is an [`EventRaw::Normal`] enumeration.
     /// Consumes `self`.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::NormalEventRaw;
+    /// assert!(NormalEventRaw::new().to_event().get_normal().is_ok());
+    /// ```
     #[must_use]
     pub const fn to_event(self) -> EventRaw<'a> {
         EventRaw::Normal {
@@ -301,6 +440,12 @@ pub enum EventRaw<'a> {
 }
 impl<'a> EventRaw<'a> {
     /// Create a new [`EventRaw`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::EventRaw;
+    /// assert!(EventRaw::new().get_normal().is_ok());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self::Normal {
@@ -311,6 +456,12 @@ impl<'a> EventRaw<'a> {
 
     /// Returns a [`NormalEventRaw`] (aka the [`EventRaw::Normal`] enumeration) if it is,
     /// or returns an [`Err`] value if not.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::EventRaw;
+    /// assert!(EventRaw::new().get_normal().is_ok());
+    /// ```
     pub const fn get_normal(&'a self) -> Result<NormalEventRaw<'a>, Error> {
         if let Self::Normal { notes, delta_beat } = self {
             Ok(NormalEventRaw {
@@ -324,12 +475,24 @@ impl<'a> EventRaw<'a> {
     /// Returns a [`NormalEventRaw`] (aka the [`EventRaw::Normal`] enumeration) if it is.
     /// # Panics
     /// If `self` is not [`EventRaw::Normal`].
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::EventRaw;
+    /// assert!(EventRaw::new().get_normal_unchecked().notes.is_empty());
+    /// ```
     #[must_use]
     pub fn get_normal_unchecked(&'a self) -> NormalEventRaw<'a> {
         self.get_normal().unwrap()
     }
 
     /// Convert to a runtime type [`Event`].
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::EventRaw;
+    /// assert!(EventRaw::new().to_runtime().get_normal().is_ok());
+    /// ```
     #[must_use]
     pub fn to_runtime(self) -> Event {
         if let Self::Normal { notes, delta_beat } = self {
@@ -367,6 +530,12 @@ pub struct MidiRaw<'a> {
 }
 impl<'a> MidiRaw<'a> {
     /// Create a new [`MidiRaw`] object.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::MidiRaw;
+    /// assert!(MidiRaw::new().events.is_empty());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -377,6 +546,12 @@ impl<'a> MidiRaw<'a> {
     }
 
     /// Convert to a runtime type [`Midi`].
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::midi::MidiRaw;
+    /// assert!(MidiRaw::new().to_runtime().events.is_empty());
+    /// ```
     #[must_use]
     pub fn to_runtime(self) -> Midi {
         Midi {
@@ -399,7 +574,7 @@ impl<'a> Default for MidiRaw<'a> {
 /// ```
 /// # use noteplay::prelude::semi2freq;
 /// # fn main() {
-/// assert_eq!(semi2freq(0), 440.0);
+/// assert_eq!(semi2freq(0).get_freq(), 440.0);
 /// # }
 /// ```
 pub fn semi2freq(semi: i32) -> Frequency {

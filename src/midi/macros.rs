@@ -2,7 +2,7 @@
 
 /// Create a new [`Event`](crate::midi::Event) object with the [`event`] macro.
 ///
-/// You cannot call this macro inside a const block.
+/// You *cannot* call this macro inside a const block.
 /// # Example
 /// ```
 /// # use noteplay::midi::event;
@@ -56,25 +56,62 @@ macro_rules! event {
     }};
 }
 /// Update the tempo of a song with the [`tempo_change`] macro.
+///
+/// # Example
+/// ```
+/// # use noteplay::midi::{tempo_change, midi};
+/// # fn main() {
+/// let midi = midi!(
+///     "Foo Song", 140.0,
+///     tempo_change!(150.0), // Faster
+///     tempo_change!(80.0),  // Slower
+/// );
+/// # }
+/// ```
 #[macro_export]
 macro_rules! tempo_change {
-    ($tempo:expr) => {
+    ($tempo:expr) => {{
         const _: f32 = $tempo;
-        $crate::midi::Event::TempoChange { tempo: $tempo }
-    };
+        $crate::midi::Event::TempoChange {
+            tempo: $crate::core::Tempo::new_unchecked($tempo),
+        }
+    }};
+}
+
+/// Update the tempo of a song with the [`tempo_change_const`] macro.
+///
+/// # Example
+/// ```
+/// # use noteplay::midi::{tempo_change_const, midi_const};
+/// # fn main() {
+/// let midi = midi_const!(
+///     "Foo Song", 140.0,
+///     tempo_change_const!(150.0), // Faster
+///     tempo_change_const!(80.0),  // Slower
+/// );
+/// # }
+/// ```
+#[macro_export]
+macro_rules! tempo_change_const {
+    ($tempo:expr) => {{
+        const _: f32 = $tempo;
+        $crate::midi::EventRaw::TempoChange {
+            tempo: $crate::core::Tempo::new_unchecked($tempo),
+        }
+    }};
 }
 
 /// Create a new [`Midi`](crate::midi::Midi) object with the [`midi`] macro.
 ///
-/// You cannot call this macro inside a const block.
+/// You *cannot* call this macro inside a const block.
 /// # Example
 /// ```
-/// use noteplay::midi::{midi, event};
-/// fn main() {
+/// # use noteplay::midi::{midi, event};
+/// # fn main() {
 /// let empty_midi = midi!();
 /// let with_tempo = midi!(60.0); // 60 beats per minute
 /// let with_events = midi!("My Song", 60.0, event!(), event!());
-/// }
+/// # }
 /// ```
 /// See also: macro [`event`]
 #[macro_export]
@@ -119,6 +156,17 @@ macro_rules! midi {
 /// Create a new [`EventRaw`](crate::midi::EventRaw) object with the [`event_const`] macro.
 ///
 /// You can **certainly call** this macro inside a const block.
+///
+/// # Example
+/// ```
+/// # use noteplay::midi::event_const;
+/// # fn main() {
+/// let empty_event = event_const!();
+/// let with_notes = event_const!(1.0, [
+///     ("C4", 1.0), ("E4", 1.0), ("G4", 1.0) // Do Mi So
+/// ]);
+/// # }
+/// ```
 #[macro_export]
 macro_rules! event_const {
     () => {{ $crate::midi::EventRaw::new() }};
@@ -163,6 +211,15 @@ macro_rules! event_const {
 /// Create a new [`MidiRaw`](crate::midi::MidiRaw) object with the [`midi_const`] macro.
 ///
 /// You can **certainly call** this macro inside a const block.
+///
+/// # Example
+/// ```
+/// # use noteplay::midi::{midi_const, event_const};
+/// # fn main() {
+/// let empty_midi = midi_const!();
+/// let with_events = midi_const!("My Song", 60.0, event_const!(), event_const!());
+/// # }
+/// ```
 #[macro_export]
 macro_rules! midi_const {
     () => {{ $crate::midi::MidiRaw::new() }};
@@ -200,20 +257,19 @@ macro_rules! midi_const {
 }
 
 /// Repeat an [`Event`](crate::midi::Event) object or an [`EventRaw`](crate::midi::EventRaw) object.
+/// # Example
+/// ```
+/// # use noteplay::midi::{event, repeat};
+/// # fn main() {
+/// assert_eq!(repeat!(event!(), 3), vec![event!(), event!(), event!()]);
+/// # }
+/// ```
 #[macro_export]
 macro_rules! repeat {
     ($event:expr,$repetitions:expr) => {{
         const _: $crate::midi::Event = $event;
         vec![$event; $repetitions]
     }};
-}
-/// Update the tempo of a song with the [`tempo_change_const`] macro.
-#[macro_export]
-macro_rules! tempo_change_const {
-    ($tempo:literal) => {
-        const _: f32 = $tempo;
-        $crate::midi::EventRaw::TempoChange { tempo: $tempo }
-    };
 }
 
 pub use {event, event_const, midi, midi_const, repeat, tempo_change, tempo_change_const};

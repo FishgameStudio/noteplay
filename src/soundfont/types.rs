@@ -164,6 +164,13 @@ pub enum Timbre {
 }
 impl Timbre {
     /// Convert to program number, [`None`] if it is [`Timbre::Default`](Self::Default).
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::soundfont::Timbre;
+    /// assert_eq!(Timbre::Default.to_program(), None);
+    /// assert_eq!(Timbre::Cello.to_program(), Some(42));
+    /// ```
     #[must_use]
     pub const fn to_program(self) -> Option<u32> {
         match self {

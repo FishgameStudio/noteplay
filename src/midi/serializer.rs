@@ -6,6 +6,13 @@ use crate::midi::{
 };
 
 /// Serialize a [`Midi`] structure to binary.
+///
+/// # Example
+/// ```
+/// # use noteplay::midi::{serialize, Midi, MAGIC};
+/// let bytes = serialize(&Midi::new());
+/// assert!(bytes.starts_with(MAGIC));
+/// ```
 #[must_use]
 pub fn serialize(midi: &Midi) -> Bytes {
     let mut buf: Bytes = Vec::new();

@@ -13,6 +13,15 @@ use std::sync::Arc;
 use std::time::Duration;
 
 /// Addition for a [`Duration`] and a [`f32`].
+///
+/// # Example
+/// ```no_run
+/// # use std::time::Duration;
+/// # fn main() {
+/// let d = Duration::from_secs_f32(1.0) + Duration::from_secs_f32(1.0);
+/// assert_eq!(d.as_secs_f32(), 2.0);
+/// # }
+/// ```
 #[inline]
 fn dur_add_f32(d: Duration, sec: f32) -> Duration {
     d + Duration::from_secs_f32(sec)
@@ -38,6 +47,15 @@ impl NotePlayer {
     /// Create a new [`NotePlayer`] object.
     /// # Errors
     /// If failed to open the default sink.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::NotePlayer;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let player = NotePlayer::new()?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn new() -> Result<Self, Error> {
         let mut handle = DeviceSinkBuilder::open_default_sink()?;
         handle.log_on_drop(false);
@@ -56,11 +74,32 @@ impl NotePlayer {
 
     /// Get the timbre.
     #[must_use]
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::NotePlayer;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let player = NotePlayer::new()?;
+    /// let timbre = player.get_timbre();
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn get_timbre(&self) -> Timbre {
         self.timbre
     }
 
     /// Set the timbre.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::NotePlayer;
+    /// # use noteplay::soundfont::Timbre;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut player = NotePlayer::new()?;
+    /// player.set_timbre(Timbre::Default);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn set_timbre(&mut self, timbre: Timbre) {
         self.timbre = timbre;
     }
@@ -68,6 +107,16 @@ impl NotePlayer {
     /// Set the soundfont from bytes from a **sf2** file.
     /// # Errors
     /// If the file isn't a valid sf2 file.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::NotePlayer;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut player = NotePlayer::new()?;
+    /// player.set_soundfont_from_bytes(&[])?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn set_soundfont_from_bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
         use crate::soundfont::loader::load_soundfont_from_bytes;
         let sf = Arc::new(load_soundfont_from_bytes(bytes)?);
@@ -200,6 +249,17 @@ impl NotePlayer {
     /// # Panics
     /// - If the frequency is not greater than 0.
     /// - If the timbre is not [`Timbre::Default`] but no soundfont has been loaded.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::{Frequency, NotePlayer};
+    /// # use std::time::Duration;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let player = NotePlayer::new()?;
+    /// player.repeat_freq(Frequency::new_unchecked(440.0), Duration::from_millis(100), 2, 90);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn repeat_freq(&self, freq: Frequency, sec: Duration, repetitions: u64, velocity: i32) {
         for _ in 0..repetitions {
             self.play_freq(freq, sec, velocity);
@@ -211,6 +271,17 @@ impl NotePlayer {
     /// # Panics
     /// - If the frequency is not greater than 0.
     /// - If the timbre is not [`Timbre::Default`] but no soundfont has been loaded.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use noteplay::core::NotePlayer;
+    /// # use std::time::Duration;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let player = NotePlayer::new()?;
+    /// player.repeat_note("A4", Duration::from_millis(100), 2, 90);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn repeat_note(&self, note: &str, sec: Duration, repetitions: u64, velocity: i32) {
         for _ in 0..repetitions {
             self.play_note(note, sec, velocity);
@@ -218,6 +289,13 @@ impl NotePlayer {
     }
 
     /// Wait for seconds.
+    ///
+    /// # Example
+    /// ```
+    /// # use noteplay::core::NotePlayer;
+    /// # use std::time::Duration;
+    /// NotePlayer::rest(Duration::ZERO);
+    /// ```
     pub fn rest(sec: Duration) {
         std::thread::sleep(sec);
     }
