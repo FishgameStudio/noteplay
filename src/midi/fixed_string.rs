@@ -220,7 +220,7 @@ impl<const N: usize> Default for FixedString<N> {
     }
 }
 
-#[allow(clippy::fallible_impl_from)] // It will also automatically implement TryFrom
+#[allow(clippy::fallible_impl_from)] // It will also automatically implement `TryFrom`
 impl<const N: usize> From<&str> for FixedString<N> {
     /// Convert a [`str`] reference to a [`FixedString`].
     ///
