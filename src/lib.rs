@@ -1,32 +1,41 @@
-#![deny(missing_docs)]
-#![deny(non_snake_case)]
-#![deny(non_ascii_idents)]
-#![deny(non_camel_case_types)]
-#![deny(non_upper_case_globals)]
-#![deny(unsafe_op_in_unsafe_fn)]
-#![deny(unused_must_use)]
-#![warn(clippy::float_cmp)]
-#![warn(clippy::if_not_else)]
-#![warn(clippy::needless_borrow)]
-#![warn(clippy::redundant_closure_for_method_calls)]
-#![warn(clippy::unused_self)]
-#![warn(clippy::useless_let_if_seq)]
-#![warn(clippy::match_wildcard_for_single_variants)]
-#![warn(clippy::same_name_method)]
-#![warn(clippy::self_named_module_files)]
-#![warn(rustdoc::broken_intra_doc_links)]
-#![warn(rustdoc::invalid_html_tags)]
-#![warn(clippy::all)]
-#![warn(clippy::nursery)]
-#![warn(rustdoc::missing_crate_level_docs)]
-#![warn(explicit_outlives_requirements)]
-#![warn(clippy::dbg_macro)]
-#![warn(clippy::todo)]
-#![warn(clippy::unimplemented)]
-#![warn(clippy::semicolon_if_nothing_returned)]
-#![warn(clippy::doc_markdown)]
-#![warn(clippy::must_use_candidate)]
-#![warn(clippy::missing_const_for_fn)]
+#![deny(
+    missing_docs,
+    non_snake_case,
+    non_ascii_idents,
+    non_camel_case_types,
+    non_upper_case_globals,
+    unsafe_op_in_unsafe_fn,
+    unused_must_use,
+    clippy::correctness
+)]
+#![warn(
+    clippy::suspicious,
+    clippy::style,
+    clippy::complexity,
+    clippy::perf,
+    clippy::float_cmp,
+    clippy::if_not_else,
+    clippy::needless_borrow,
+    clippy::redundant_closure_for_method_calls,
+    clippy::unused_self,
+    clippy::useless_let_if_seq,
+    clippy::match_wildcard_for_single_variants,
+    clippy::same_name_method,
+    clippy::self_named_module_files,
+    rustdoc::broken_intra_doc_links,
+    rustdoc::invalid_html_tags,
+    clippy::all,
+    clippy::nursery,
+    rustdoc::missing_crate_level_docs,
+    explicit_outlives_requirements,
+    clippy::dbg_macro,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::semicolon_if_nothing_returned,
+    clippy::doc_markdown,
+    clippy::must_use_candidate,
+    clippy::missing_const_for_fn
+)]
 #![allow(clippy::redundant_pub_crate)]
 
 //! # Noteplay: Note & Midi Player for Rust
