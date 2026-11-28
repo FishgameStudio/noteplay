@@ -6,7 +6,7 @@ pub use crate::core::{
 pub use crate::midi::{
     AUTHOR_LEN, COPYRIGHT_LEN, DEFAULT_META, Event, EventRaw, FixedString, FixedStringParseError,
     MAGIC, Midi, MidiMeta, MidiPlayer, MidiRaw, Note, SONG_NAME_LEN, VERSION, deserialize, event,
-    event_const, get_metadata, midi, midi_const, play_qmid_file, repeat, serialize,
+    event_const, midi, midi_const, repeat, serialize, utils::*,
 };
 pub use crate::soundfont::Timbre;
 
