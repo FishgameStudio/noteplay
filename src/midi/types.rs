@@ -122,7 +122,7 @@ impl Event {
     }
     /// Returns a [`NormalEvent`] (aka the [`Event::Normal`] enumeration) if it is.
     /// # Panics
-    /// If [`self`] is not [`Event::Normal`].
+    /// If `self` is not [`Event::Normal`].
     #[must_use]
     pub fn get_normal_unchecked(&self) -> NormalEvent {
         self.get_normal().unwrap()
@@ -232,7 +232,7 @@ impl Default for Midi {
     }
 }
 
-/// A struct that stores fields in the [`RawEvent::Normal`].
+/// A struct that stores fields in the [`EventRaw::Normal`].
 #[derive(Debug, Clone, Copy)]
 pub struct NormalEventRaw<'a> {
     /// Notes to press in a beat.
@@ -394,6 +394,14 @@ impl<'a> Default for MidiRaw<'a> {
 
 /// Convert semi offset (A4 = 0) to frequency Hz.
 /// Runtime only, precise, uses standard library exp2.
+///
+/// # Example
+/// ```
+/// # use noteplay::prelude::semi2freq;
+/// # fn main() {
+/// assert_eq!(semi2freq(0), 440.0);
+/// # }
+/// ```
 pub fn semi2freq(semi: i32) -> Frequency {
     Frequency::new_unchecked(440.0 * (semi as f32 / 12.0).exp2())
 }
