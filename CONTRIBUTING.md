@@ -15,6 +15,7 @@ This project follows Rust community conventions. The rules below supplement `rus
 - Name things clearly; avoid abbreviations unless they are widely understood (e.g. `id`, `ctx`).
 - If you created a new folder, please add a `README.md` file in it and describe this folder in the `README.md`.
 - Add unit tests for new APIs if possible.
+- Add Doctests for functions and macros, use `script/check_missing_doctest.py` to check. 
 
 ### Error Handling
 
